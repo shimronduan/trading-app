@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Card, Badge } from '@/components/ui';
-import { formatCurrency, formatPercentage, formatPositionSize, getPnlColor, cn } from '@/utils';
+import { formatCurrency, formatPercentage, formatPositionSize, getPnlColor, cn, safeParseFloat } from '@/utils';
 import { BinancePosition } from '@/types';
 
 interface OpenPositionsTableProps {
@@ -11,7 +11,7 @@ interface OpenPositionsTableProps {
 
 export function OpenPositionsTable({ positions }: OpenPositionsTableProps) {
   // Filter out positions with zero amounts
-  const activePositions = positions.filter(pos => parseFloat(pos.positionAmt) !== 0);
+  const activePositions = positions.filter(pos => safeParseFloat(pos.positionAmt) !== 0);
 
   if (activePositions.length === 0) {
     return (
@@ -68,11 +68,11 @@ export function OpenPositionsTable({ positions }: OpenPositionsTableProps) {
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {activePositions.map((position, index) => {
-              const positionAmt = parseFloat(position.positionAmt);
-              const entryPrice = parseFloat(position.entryPrice);
-              const markPrice = parseFloat(position.markPrice);
-              const unrealizedProfit = parseFloat(position.unrealizedProfit);
-              const leverage = parseFloat(position.leverage);
+              const positionAmt = safeParseFloat(position.positionAmt);
+              const entryPrice = safeParseFloat(position.entryPrice);
+              const markPrice = safeParseFloat(position.markPrice);
+              const unrealizedProfit = safeParseFloat(position.unrealizedProfit);
+              const leverage = safeParseFloat(position.leverage);
               
               const pnlPercentage = entryPrice > 0 
                 ? ((markPrice - entryPrice) / entryPrice) * 100 * (positionAmt > 0 ? 1 : -1)

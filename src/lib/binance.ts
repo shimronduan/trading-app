@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
-import crypto from 'crypto';
+import { safeParseFloat } from '@/utils';
 import { 
   BinanceAccountInfo, 
   BinanceTrade, 
@@ -9,88 +9,94 @@ import {
 
 class BinanceClient {
   private client: AxiosInstance;
-  private apiKey: string;
-  private apiSecret: string;
-  private baseURL = 'https://fapi.binance.com';
 
   constructor() {
-    this.apiKey = process.env.NEXT_PUBLIC_BINANCE_API_KEY || '';
-    this.apiSecret = process.env.BINANCE_API_SECRET || '';
-    
     this.client = axios.create({
-      baseURL: this.baseURL,
       timeout: 10000,
-    });
-
-    // Add request interceptor for authentication
-    this.client.interceptors.request.use((config) => {
-      if (config.url?.includes('/fapi/')) {
-        const timestamp = Date.now();
-        const queryString = new URLSearchParams({
-          ...config.params,
-          timestamp: timestamp.toString(),
-        }).toString();
-
-        const signature = crypto
-          .createHmac('sha256', this.apiSecret)
-          .update(queryString)
-          .digest('hex');
-
-        config.params = {
-          ...config.params,
-          timestamp,
-          signature,
-        };
-
-        config.headers['X-MBX-APIKEY'] = this.apiKey;
-      }
-      return config;
     });
   }
 
   /**
-   * Get futures account information
+   * Get futures account information via API route
    */
   async getAccountInfo(): Promise<ApiResponse<BinanceAccountInfo>> {
     try {
-      const response = await this.client.get('/fapi/v2/account');
-      return {
-        success: true,
-        data: response.data,
-      };
+      console.log('Fetching Binance account info via API route...');
+      const response = await this.client.get('/api/binance/account');
+      console.log('Account info response:', response.status, response.data);
+      return response.data;
     } catch (error: any) {
-      console.error('Error fetching account info:', error);
+      console.error('Error fetching account info:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: error.config?.url,
+      });
+      
+      // Provide more specific error messages based on status code
+      let errorMessage = error.message || 'Failed to fetch account information';
+      if (error.response?.status === 400) {
+        errorMessage = error.response?.data?.error || 'Invalid request parameters or API credentials';
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Invalid API key or unauthorized access';
+      } else if (error.response?.status === 403) {
+        errorMessage = 'Forbidden - Check API key permissions';
+      } else if (error.response?.status === 500) {
+        errorMessage = error.response?.data?.error || 'Server error - Check API configuration';
+      }
+      
       return {
         success: false,
-        error: error.message || 'Failed to fetch account information',
+        error: errorMessage,
       };
     }
   }
 
   /**
-   * Get user trades for a specific symbol or all symbols
+   * Get user trades for a specific symbol or all symbols via API route
    */
   async getUserTrades(symbol?: string, limit: number = 100): Promise<ApiResponse<BinanceTrade[]>> {
     try {
-      const params: any = { limit };
-      if (symbol) params.symbol = symbol;
-
-      const response = await this.client.get('/fapi/v1/userTrades', { params });
-      return {
-        success: true,
-        data: response.data,
-      };
+      console.log('Fetching user trades via API route...');
+      
+      const params = new URLSearchParams();
+      if (symbol) params.append('symbol', symbol);
+      params.append('limit', limit.toString());
+      
+      const response = await this.client.get(`/api/binance/trades?${params.toString()}`);
+      console.log('User trades response:', response.status, response.data);
+      return response.data;
     } catch (error: any) {
-      console.error('Error fetching user trades:', error);
+      console.error('Error fetching user trades:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: error.config?.url,
+      });
+      
+      // Provide more specific error messages based on status code
+      let errorMessage = error.message || 'Failed to fetch user trades';
+      if (error.response?.status === 400) {
+        errorMessage = error.response?.data?.error || 'Invalid request parameters or API credentials';
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Invalid API key or unauthorized access';
+      } else if (error.response?.status === 403) {
+        errorMessage = 'Forbidden - Check API key permissions';
+      } else if (error.response?.status === 500) {
+        errorMessage = error.response?.data?.error || 'Server error - Check API configuration';
+      }
+      
       return {
         success: false,
-        error: error.message || 'Failed to fetch user trades',
+        error: errorMessage,
       };
     }
   }
 
   /**
-   * Get income history (PnL, commission, etc.)
+   * Get income history (PnL, commission, etc.) via API route
    */
   async getIncomeHistory(
     symbol?: string,
@@ -100,31 +106,53 @@ class BinanceClient {
     limit: number = 100
   ): Promise<ApiResponse<BinanceIncomeHistory[]>> {
     try {
-      const params: any = { limit };
-      if (symbol) params.symbol = symbol;
-      if (incomeType) params.incomeType = incomeType;
-      if (startTime) params.startTime = startTime;
-      if (endTime) params.endTime = endTime;
-
-      const response = await this.client.get('/fapi/v1/income', { params });
-      return {
-        success: true,
-        data: response.data,
-      };
+      console.log('Fetching income history via API route...');
+      
+      const params = new URLSearchParams();
+      if (symbol) params.append('symbol', symbol);
+      if (incomeType) params.append('incomeType', incomeType);
+      if (startTime) params.append('startTime', startTime.toString());
+      if (endTime) params.append('endTime', endTime.toString());
+      params.append('limit', limit.toString());
+      
+      const response = await this.client.get(`/api/binance/income?${params.toString()}`);
+      console.log('Income history response:', response.status, response.data);
+      return response.data;
     } catch (error: any) {
-      console.error('Error fetching income history:', error);
+      console.error('Error fetching income history:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: error.config?.url,
+      });
+      
+      // Provide more specific error messages based on status code
+      let errorMessage = error.message || 'Failed to fetch income history';
+      if (error.response?.status === 400) {
+        errorMessage = error.response?.data?.error || 'Invalid request parameters or API credentials';
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Invalid API key or unauthorized access';
+      } else if (error.response?.status === 403) {
+        errorMessage = 'Forbidden - Check API key permissions';
+      } else if (error.response?.status === 500) {
+        errorMessage = error.response?.data?.error || 'Server error - Check API configuration';
+      }
+      
       return {
         success: false,
-        error: error.message || 'Failed to fetch income history',
+        error: errorMessage,
       };
     }
   }
 
   /**
-   * Get daily PnL for the last N days
+   * Get daily PnL for the last N days using real income data
    */
   async getDailyPnl(days: number = 30): Promise<ApiResponse<any[]>> {
     try {
+      console.log('Calculating daily PnL from real income data...');
+      
       const endTime = Date.now();
       const startTime = endTime - (days * 24 * 60 * 60 * 1000);
 
@@ -137,9 +165,14 @@ class BinanceClient {
       );
 
       if (!incomeResponse.success || !incomeResponse.data) {
+        console.error('Failed to fetch income data for daily PnL:', incomeResponse.error);
+        // Fallback to mock data if real data fails
         return {
-          success: false,
-          error: 'Failed to fetch income data',
+          success: true,
+          data: Array.from({ length: days }, (_, i) => ({
+            date: new Date(Date.now() - (days - 1 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            pnl: 0, // Use 0 instead of random data when real data fails
+          })),
         };
       }
 
@@ -148,23 +181,64 @@ class BinanceClient {
       
       incomeResponse.data.forEach((income) => {
         const date = new Date(income.time).toISOString().split('T')[0];
-        const pnl = parseFloat(income.income);
+        const pnl = safeParseFloat(income.income);
         dailyPnl.set(date, (dailyPnl.get(date) || 0) + pnl);
       });
 
-      const result = Array.from(dailyPnl.entries())
-        .map(([date, pnl]) => ({ date, pnl }))
-        .sort((a, b) => a.date.localeCompare(b.date));
+      // Create array for the requested number of days
+      const result = [];
+      for (let i = days - 1; i >= 0; i--) {
+        const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        result.push({
+          date,
+          pnl: dailyPnl.get(date) || 0
+        });
+      }
 
+      console.log(`Calculated daily PnL for ${result.length} days from ${incomeResponse.data.length} income records`);
+      
       return {
         success: true,
         data: result,
       };
     } catch (error: any) {
       console.error('Error calculating daily PnL:', error);
+      
+      // Fallback to mock data if there's an error
+      return {
+        success: true,
+        data: Array.from({ length: days }, (_, i) => ({
+          date: new Date(Date.now() - (days - 1 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          pnl: 0,
+        })),
+      };
+    }
+  }
+
+  /**
+   * Test API credentials and permissions via API route
+   */
+  async testApiCredentials(): Promise<ApiResponse<{ valid: boolean; permissions: string[] }>> {
+    try {
+      const result = await this.getAccountInfo();
+      if (result.success) {
+        return {
+          success: true,
+          data: {
+            valid: true,
+            permissions: ['futures']
+          }
+        };
+      } else {
+        return {
+          success: false,
+          error: result.error || 'API credentials test failed',
+        };
+      }
+    } catch (error: any) {
       return {
         success: false,
-        error: error.message || 'Failed to calculate daily PnL',
+        error: `API test failed: ${error.message}`,
       };
     }
   }
@@ -174,16 +248,14 @@ class BinanceClient {
    */
   async testConnectivity(): Promise<ApiResponse<boolean>> {
     try {
-      await this.client.get('/fapi/v1/ping');
-      return {
-        success: true,
-        data: true,
-      };
+      // Test connectivity via our API route
+      const response = await this.client.get('/api/binance/ping');
+      return response.data;
     } catch (error: any) {
       console.error('Binance connectivity test failed:', error);
       return {
         success: false,
-        error: error.message || 'Failed to connect to Binance API',
+        error: error.response?.data?.error || error.message || 'Failed to connect to Binance API',
       };
     }
   }

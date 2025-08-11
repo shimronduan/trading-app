@@ -14,7 +14,7 @@ import {
   Wallet,
   TrendingDown
 } from 'lucide-react';
-import { cn, formatCurrency, formatPercentage } from '@/utils';
+import { cn, formatCurrency, formatPercentage, safeParseFloat } from '@/utils';
 import { useTheme } from '@/lib/theme';
 import { useBinanceAccountInfo } from '@/hooks';
 import { NavItem } from '@/types';
@@ -48,8 +48,22 @@ export default function Layout({ children }: LayoutProps) {
   const { data: accountData } = useBinanceAccountInfo();
 
   const accountInfo = accountData?.data;
-  const totalBalance = accountInfo ? parseFloat(accountInfo.totalWalletBalance) : 0;
-  const unrealizedPnl = accountInfo ? parseFloat(accountInfo.totalUnrealizedPnl) : 0;
+  
+  // Safe parsing with fallbacks and debugging
+  const totalBalance = accountInfo ? 
+    safeParseFloat(accountInfo.totalWalletBalance) : 0;
+  const unrealizedPnl = accountInfo ? 
+    safeParseFloat(accountInfo.totalUnrealizedPnl) : 0;
+  
+  // Debug logging
+  if (accountInfo && (isNaN(totalBalance) || isNaN(unrealizedPnl))) {
+    console.log('NaN detected in account parsing:', {
+      totalWalletBalance: accountInfo.totalWalletBalance,
+      totalUnrealizedPnl: accountInfo.totalUnrealizedPnl,
+      accountInfoKeys: Object.keys(accountInfo),
+    });
+  }
+  
   const pnlPercentage = totalBalance > 0 ? (unrealizedPnl / totalBalance) * 100 : 0;
 
   return (

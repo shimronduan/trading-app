@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { binanceClient, mockBinanceData } from '@/lib/binance';
 import { azureApiClient, mockAtrMultiples } from '@/lib/azure';
+import { safeParseFloat } from '@/utils';
 import { 
   BinanceAccountInfo, 
   BinanceTrade, 
@@ -220,7 +221,7 @@ export function useTradingStats() {
     const tradesData = trades.data.data;
     const realizedPnl = incomeHistory.data.data
       .filter(income => income.incomeType === 'REALIZED_PNL')
-      .map(income => parseFloat(income.income));
+      .map(income => safeParseFloat(income.income));
 
     const totalTrades = tradesData.length;
     const winningTrades = realizedPnl.filter(pnl => pnl > 0).length;

@@ -3,7 +3,7 @@
 import React from 'react';
 import { Wallet, TrendingUp, TrendingDown, Activity, Target } from 'lucide-react';
 import { Card } from '@/components/ui';
-import { formatCurrency, formatPercentage, cn } from '@/utils';
+import { formatCurrency, formatPercentage, cn, safeParseFloat } from '@/utils';
 import { BinanceAccountInfo } from '@/types';
 
 interface WalletOverviewProps {
@@ -11,10 +11,10 @@ interface WalletOverviewProps {
 }
 
 export function WalletOverview({ accountInfo }: WalletOverviewProps) {
-  const totalBalance = parseFloat(accountInfo.totalWalletBalance);
-  const unrealizedPnl = parseFloat(accountInfo.totalUnrealizedPnl);
-  const marginBalance = parseFloat(accountInfo.totalMarginBalance);
-  const availableBalance = parseFloat(accountInfo.availableBalance);
+  const totalBalance = safeParseFloat(accountInfo.totalWalletBalance);
+  const unrealizedPnl = safeParseFloat(accountInfo.totalUnrealizedPnl);
+  const marginBalance = safeParseFloat(accountInfo.totalMarginBalance);
+  const availableBalance = safeParseFloat(accountInfo.availableBalance);
   
   const pnlPercentage = totalBalance > 0 ? (unrealizedPnl / totalBalance) * 100 : 0;
   const marginUtilization = totalBalance > 0 ? ((totalBalance - availableBalance) / totalBalance) * 100 : 0;

@@ -3,7 +3,7 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { Card, Badge } from '@/components/ui';
-import { formatCurrency, formatPositionSize, cn } from '@/utils';
+import { formatCurrency, formatPositionSize, cn, safeParseFloat } from '@/utils';
 import { BinanceTrade } from '@/types';
 
 interface RecentTradesTableProps {
@@ -69,10 +69,10 @@ export function RecentTradesTable({ trades }: RecentTradesTableProps) {
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {sortedTrades.map((trade, index) => {
-              const qty = parseFloat(trade.qty);
-              const price = parseFloat(trade.price);
-              const commission = parseFloat(trade.commission);
-              const realizedPnl = parseFloat(trade.realizedPnl);
+              const qty = safeParseFloat(trade.qty);
+              const price = safeParseFloat(trade.price);
+              const commission = safeParseFloat(trade.commission);
+              const realizedPnl = safeParseFloat(trade.realizedPnl);
               const isBuy = trade.side === 'BUY';
               
               return (
@@ -133,11 +133,11 @@ export function RecentTradesTable({ trades }: RecentTradesTableProps) {
           </span>
           <span className={cn(
             'font-semibold',
-            sortedTrades.reduce((sum, trade) => sum + parseFloat(trade.realizedPnl), 0) > 0
+            sortedTrades.reduce((sum, trade) => sum + safeParseFloat(trade.realizedPnl), 0) > 0
               ? 'text-green-600 dark:text-green-400'
               : 'text-red-600 dark:text-red-400'
           )}>
-            {formatCurrency(sortedTrades.reduce((sum, trade) => sum + parseFloat(trade.realizedPnl), 0))}
+            {formatCurrency(sortedTrades.reduce((sum, trade) => sum + safeParseFloat(trade.realizedPnl), 0))}
           </span>
         </div>
       </div>
