@@ -49,10 +49,10 @@ export default function Layout({ children }: LayoutProps) {
 
   const accountInfo = accountData?.data;
   
-  // Safe parsing with fallbacks and debugging
+  // Safe parsing with fallbacks for null values
   const totalBalance = accountInfo ? 
     safeParseFloat(accountInfo.totalWalletBalance) : 0;
-  const unrealizedPnl = accountInfo ? 
+  const unrealizedPnl = accountInfo && accountInfo.totalUnrealizedPnl !== null ? 
     safeParseFloat(accountInfo.totalUnrealizedPnl) : 0;
   
   // Debug logging
@@ -63,6 +63,15 @@ export default function Layout({ children }: LayoutProps) {
       accountInfoKeys: Object.keys(accountInfo),
     });
   }
+  
+  // Debug logging to understand the values
+  console.log('Layout account info:', {
+    accountInfo: !!accountInfo,
+    totalBalance,
+    unrealizedPnl,
+    totalWalletBalance: accountInfo?.totalWalletBalance,
+    totalUnrealizedPnl: accountInfo?.totalUnrealizedPnl
+  });
   
   const pnlPercentage = totalBalance > 0 ? (unrealizedPnl / totalBalance) * 100 : 0;
 

@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { Card } from '@/components/ui';
+import { PeriodSelector, TimePeriod, filterDataByPeriod } from '@/components/PeriodSelector';
 import { formatCurrency, formatPercentage } from '@/utils';
 import { DailyPnlData } from '@/types';
 
@@ -11,26 +12,35 @@ interface PerformanceChartsProps {
 }
 
 export function PerformanceCharts({ dailyPnl }: PerformanceChartsProps) {
-  // Calculate cumulative PnL for portfolio growth chart
-  const portfolioData = dailyPnl.map((item, index) => {
-    const cumulativePnl = dailyPnl
-      .slice(0, index + 1)
-      .reduce((sum, day) => sum + day.pnl, 0);
-    
-    return {
-      date: item.date,
-      pnl: item.pnl,
-      cumulativePnl,
-      formattedDate: new Date(item.date).toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric' 
-      }),
-    };
-  });
+  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('30d');
+
+  // Filter data based on selected period
+  const filteredData = useMemo(() => 
+    filterDataByPeriod(dailyPnl, selectedPeriod), 
+    [dailyPnl, selectedPeriod]
+  );
+  // Calculate cumulative PnL for portfolio growth chart using filtered data
+  const portfolioData = useMemo(() => {
+    return filteredData.map((item, index) => {
+      const cumulativePnl = filteredData
+        .slice(0, index + 1)
+        .reduce((sum, day) => sum + day.pnl, 0);
+      
+      return {
+        date: item.date,
+        pnl: item.pnl,
+        cumulativePnl,
+        formattedDate: new Date(item.date).toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric' 
+        }),
+      };
+    });
+  }, [filteredData]);
 
   const totalPnl = portfolioData[portfolioData.length - 1]?.cumulativePnl || 0;
-  const profitableDays = dailyPnl.filter(day => day.pnl > 0).length;
-  const totalDays = dailyPnl.length;
+  const profitableDays = filteredData.filter(day => day.pnl > 0).length;
+  const totalDays = filteredData.length;
   const winRate = totalDays > 0 ? (profitableDays / totalDays) * 100 : 0;
 
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -62,22 +72,40 @@ export function PerformanceCharts({ dailyPnl }: PerformanceChartsProps) {
   };
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      {/* Daily P&L Chart */}
-      <Card>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Daily P&L
-          </h3>
-          <div className="flex items-center space-x-4 text-sm">
-            <div className="text-right">
-              <p className="text-gray-500 dark:text-gray-400">Win Rate</p>
-              <p className="font-semibold text-gray-900 dark:text-white">
-                {formatPercentage(winRate)}
-              </p>
+    <div className="space-y-6">
+      {/* Period Selector */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          Performance Analytics
+        </h2>
+        <PeriodSelector
+          selectedPeriod={selectedPeriod}
+          onPeriodChange={setSelectedPeriod}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Daily P&L Chart */}
+        <Card>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Daily P&L
+            </h3>
+            <div className="flex items-center space-x-4 text-sm">
+              <div className="text-right">
+                <p className="text-gray-500 dark:text-gray-400">Win Rate</p>
+                <p className="font-semibold text-gray-900 dark:text-white">
+                  {formatPercentage(winRate)}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-gray-500 dark:text-gray-400">Trading Days</p>
+                <p className="font-semibold text-gray-900 dark:text-white">
+                  {totalDays}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
         
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
@@ -147,6 +175,7 @@ export function PerformanceCharts({ dailyPnl }: PerformanceChartsProps) {
           </ResponsiveContainer>
         </div>
       </Card>
+      </div>
     </div>
   );
 }

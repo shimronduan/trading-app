@@ -47,10 +47,11 @@ export function formatCompactNumber(num: number): string {
 }
 
 /**
- * Safely converts string to number
+ * Safely converts string to number, handling null/undefined values
  */
-export function safeParseFloat(value: string | number): number {
+export function safeParseFloat(value: string | number | null | undefined): number {
   if (typeof value === 'number') return value;
+  if (value === null || value === undefined || value === '') return 0;
   const parsed = parseFloat(value);
   return isNaN(parsed) ? 0 : parsed;
 }

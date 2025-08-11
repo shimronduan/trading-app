@@ -16,6 +16,7 @@ export const queryKeys = {
   binance: {
     accountInfo: ['binance', 'accountInfo'] as const,
     trades: ['binance', 'trades'] as const,
+    orders: ['binance', 'orders'] as const,
     dailyPnl: (days: number) => ['binance', 'dailyPnl', days] as const,
     incomeHistory: ['binance', 'incomeHistory'] as const,
   },
@@ -55,6 +56,20 @@ export function useBinanceTrades(symbol?: string, limit: number = 50) {
       return await binanceClient.getUserTrades(symbol, limit);
     },
     staleTime: 60000, // 1 minute
+  });
+}
+
+export function useBinanceOpenOrders(symbol?: string) {
+  return useQuery({
+    queryKey: [...queryKeys.binance.orders, symbol],
+    queryFn: async () => {
+      if (USE_MOCK_DATA) {
+        return { success: true, data: [] }; // Mock: no open orders
+      }
+      return await binanceClient.getOpenOrders(symbol);
+    },
+    staleTime: 30000, // 30 seconds
+    refetchInterval: 60000, // 1 minute
   });
 }
 
@@ -185,14 +200,16 @@ export function useDeleteAtrMultiple() {
 export function useDashboardData() {
   const accountInfo = useBinanceAccountInfo();
   const trades = useBinanceTrades(undefined, 20);
+  const openOrders = useBinanceOpenOrders();
   const dailyPnl = useBinanceDailyPnl(30);
 
-  const isLoading = accountInfo.isLoading || trades.isLoading || dailyPnl.isLoading;
-  const isError = accountInfo.isError || trades.isError || dailyPnl.isError;
+  const isLoading = accountInfo.isLoading || trades.isLoading || openOrders.isLoading || dailyPnl.isLoading;
+  const isError = accountInfo.isError || trades.isError || openOrders.isError || dailyPnl.isError;
 
   const data = {
     accountInfo: accountInfo.data?.data,
     recentTrades: trades.data?.data || [],
+    openOrders: openOrders.data?.data || [],
     dailyPnl: dailyPnl.data?.data || [],
   };
 
@@ -203,6 +220,7 @@ export function useDashboardData() {
     refetch: () => {
       accountInfo.refetch();
       trades.refetch();
+      openOrders.refetch();
       dailyPnl.refetch();
     },
   };

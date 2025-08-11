@@ -4,6 +4,7 @@ import {
   BinanceAccountInfo, 
   BinanceTrade, 
   BinanceIncomeHistory,
+  BinanceOrder,
   ApiResponse 
 } from '@/types';
 
@@ -78,6 +79,47 @@ class BinanceClient {
       
       // Provide more specific error messages based on status code
       let errorMessage = error.message || 'Failed to fetch user trades';
+      if (error.response?.status === 400) {
+        errorMessage = error.response?.data?.error || 'Invalid request parameters or API credentials';
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Invalid API key or unauthorized access';
+      } else if (error.response?.status === 403) {
+        errorMessage = 'Forbidden - Check API key permissions';
+      } else if (error.response?.status === 500) {
+        errorMessage = error.response?.data?.error || 'Server error - Check API configuration';
+      }
+      
+      return {
+        success: false,
+        error: errorMessage,
+      };
+    }
+  }
+
+  /**
+   * Get open orders via API route
+   */
+  async getOpenOrders(symbol?: string): Promise<ApiResponse<BinanceOrder[]>> {
+    try {
+      console.log('Fetching open orders via API route...');
+      
+      const params = new URLSearchParams();
+      if (symbol) params.append('symbol', symbol);
+      
+      const response = await this.client.get(`/api/binance/orders?${params.toString()}`);
+      console.log('Open orders response:', response.status, response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching open orders:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: error.config?.url,
+      });
+      
+      // Provide more specific error messages based on status code
+      let errorMessage = error.message || 'Failed to fetch open orders';
       if (error.response?.status === 400) {
         errorMessage = error.response?.data?.error || 'Invalid request parameters or API credentials';
       } else if (error.response?.status === 401) {

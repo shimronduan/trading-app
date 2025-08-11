@@ -1,0 +1,13 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="16" cy="16" r="15" fill="#1E40AF" stroke="#1D4ED8" stroke-width="2"/>
+  
+  <!-- Chart lines representing trading data -->
+  <path d="M6 22 L10 18 L14 20 L18 14 L22 16 L26 12" stroke="#10B981" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Upward trending arrow -->
+  <path d="M22 12 L26 12 L26 16" stroke="#10B981" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Dollar sign overlay -->
+  <text x="16" y="20" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#FFFFFF" text-anchor="middle">$</text>
+</svg>

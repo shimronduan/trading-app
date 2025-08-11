@@ -83,6 +83,30 @@ export interface BinanceIncomeHistory {
   tradeId: string;
 }
 
+export interface BinanceOrder {
+  orderId: number;
+  symbol: string;
+  status: string;
+  clientOrderId: string;
+  price: string;
+  avgPrice: string;
+  origQty: string;
+  executedQty: string;
+  cumQuote: string;
+  timeInForce: string;
+  type: string;
+  reduceOnly: boolean;
+  closePosition: boolean;
+  side: 'BUY' | 'SELL';
+  positionSide: string;
+  stopPrice: string;
+  workingType: string;
+  priceProtect: boolean;
+  origType: string;
+  time: number;
+  updateTime: number;
+}
+
 // ATR Multiples Types
 export interface AtrMultiple {
   id?: string;

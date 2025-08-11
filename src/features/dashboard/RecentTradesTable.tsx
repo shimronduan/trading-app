@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 import { Card, Badge } from '@/components/ui';
+import { Pagination } from '@/components/Pagination';
 import { formatCurrency, formatPositionSize, cn, safeParseFloat } from '@/utils';
 import { BinanceTrade } from '@/types';
 
@@ -11,6 +12,27 @@ interface RecentTradesTableProps {
 }
 
 export function RecentTradesTable({ trades }: RecentTradesTableProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Sort trades by time (most recent first)
+  const sortedTrades = useMemo(() => 
+    [...trades].sort((a, b) => b.time - a.time), 
+    [trades]
+  );
+
+  // Calculate pagination
+  const totalPages = Math.ceil(sortedTrades.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedTrades = sortedTrades.slice(startIndex, endIndex);
+
+  // Reset to page 1 when items per page changes
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
+
   if (trades.length === 0) {
     return (
       <Card>
@@ -26,9 +48,6 @@ export function RecentTradesTable({ trades }: RecentTradesTableProps) {
     );
   }
 
-  // Sort trades by time (most recent first)
-  const sortedTrades = [...trades].sort((a, b) => b.time - a.time);
-
   return (
     <Card>
       <div className="flex items-center justify-between mb-4">
@@ -36,7 +55,7 @@ export function RecentTradesTable({ trades }: RecentTradesTableProps) {
           Recent Trades
         </h3>
         <Badge variant="info">
-          {trades.length} trade{trades.length !== 1 ? 's' : ''}
+          {trades.length} total trade{trades.length !== 1 ? 's' : ''}
         </Badge>
       </div>
 
@@ -68,7 +87,7 @@ export function RecentTradesTable({ trades }: RecentTradesTableProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-            {sortedTrades.map((trade, index) => {
+            {paginatedTrades.map((trade, index) => {
               const qty = safeParseFloat(trade.qty);
               const price = safeParseFloat(trade.price);
               const commission = safeParseFloat(trade.commission);
@@ -123,6 +142,19 @@ export function RecentTradesTable({ trades }: RecentTradesTableProps) {
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination */}
+      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={trades.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={handleItemsPerPageChange}
+          itemsPerPageOptions={[5, 10, 20, 50]}
+        />
       </div>
 
       {/* Summary */}
