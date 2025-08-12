@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { Key, Database, Globe, Bell, Save } from 'lucide-react';
 import { Card, Button, Badge } from '@/components/ui';
 import { useTheme } from '@/lib/theme';
-import BinanceDebug from '@/components/BinanceDebug';
 
 export default function SettingsPage() {
   const { isDarkMode, toggleTheme } = useTheme();
@@ -186,9 +185,6 @@ export default function SettingsPage() {
           </Badge>
         </div>
       </Card>
-
-      {/* Binance API Debug */}
-      <BinanceDebug />
 
       {/* Save Button */}
       <div className="flex justify-end">

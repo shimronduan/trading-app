@@ -39,3 +39,16 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# terraform
+infra/.terraform/
+infra/.terraform.lock.hcl
+infra/terraform.tfstate*
+infra/terraform.tfplan*
+
+# vscode
+.vscode/
+
+# temporary files
+*.tmp
+*.temp

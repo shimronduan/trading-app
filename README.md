@@ -1,53 +1,105 @@
 # Trading Bot Dashboard
 
-A modern, mobile-friendly Next.js dashboard for managing your futures trading bot with Binance integration and Azure ATR multiples management.
+A modern Next.js dashboard for managing futures trading with Binance integration and ATR multiples management.
 
-![Trading Dashboard Screenshot]()
+## 🚀 Quick Deploy to Azure (FREE)
 
-## 🚀 Quick Deploy to Azure
+Deploy this app to Azure using Terraform infrastructure as code - **completely free with Azure Free Tier!**
 
-Deploy this app to Azure with **Terraform** infrastructure as code! **COMPLETELY FREE with Azure Free Tier!**
-
-1. **Run setup script**: `./setup-azure.sh`
-2. **Configure GitHub secrets** (see [DEPLOYMENT.md](DEPLOYMENT.md))
+1. **Setup Terraform state**: `./setup-terraform-state.sh`
+2. **Configure GitHub environment** (see [TERRAFORM-DEPLOYMENT.md](TERRAFORM-DEPLOYMENT.md))
 3. **Push to main branch** - Automatic deployment via GitHub Actions!
 
-📚 **[Complete Deployment Guide →](DEPLOYMENT.md)**  
-🔧 **[Terraform Infrastructure Guide →](TERRAFORM.md)**
+📚 **[Complete Deployment Guide →](TERRAFORM-DEPLOYMENT.md)**  
+🔧 **[Terraform State Guide →](TERRAFORM-STATE.md)**
 
 ## Features
 
 ### 📊 Dashboard
-- **Wallet Overview**: Real-time futures wallet balance, unrealized PnL, margin balance, and available balance
-- **Performance Charts**: Daily P&L chart and portfolio growth visualization
-- **Open Positions**: Live table of current positions with entry price, mark price, PnL, and leverage
-- **Recent Trades**: Historical trades with side, quantity, price, commission, and realized PnL
-- **Trading Statistics**: Win rate, total P&L, and other key metrics
+- Real-time futures wallet balance and performance metrics
+- Live positions table with P&L tracking
+- Historical trades and performance charts
+- Win rate and trading statistics
 
 ### ⚙️ ATR Multiples Management
-- **CRUD Operations**: Create, read, update, and delete ATR multiples
-- **Sortable Table**: Sort by row, ATR multiple, close fraction, or creation date
-- **Search Functionality**: Filter multiples by any field
-- **Form Validation**: Comprehensive input validation with helpful error messages
-- **Responsive Design**: Works perfectly on mobile and desktop
+- Create, edit, and delete ATR multiples
+- Sortable and searchable table interface
+- Form validation and error handling
 
 ### 🎨 Modern UI/UX
-- **Dark/Light Mode**: Toggle between themes with system preference detection
-- **Responsive Design**: Mobile-first approach with bottom navigation on mobile
-- **Loading States**: Skeleton loaders and spinners for better UX
-- **Empty States**: Helpful messages when no data is available
-- **Toast Notifications**: Success and error feedback for user actions
+- Dark/Light mode toggle
+- Mobile-responsive design
+- Loading states and smooth animations
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 with App Router
-- **Language**: TypeScript throughout
+- **Framework**: Next.js 15 with App Router and TypeScript
 - **Styling**: Tailwind CSS v4
-- **State Management**: TanStack Query (React Query) for server state
-- **HTTP Client**: Axios with interceptors
-- **Charts**: Recharts for performance visualization
+- **State Management**: TanStack Query (React Query)
+- **Charts**: Recharts for data visualization
 - **Forms**: React Hook Form with Zod validation
-- **Icons**: Lucide React
+- **Deployment**: Azure App Service with Terraform
+- **CI/CD**: GitHub Actions
+
+## Local Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+```
+
+## Environment Variables
+
+Create your GitHub environment with these secrets:
+
+```
+AZURE_CREDENTIALS={"clientId":"...","clientSecret":"...","subscriptionId":"...","tenantId":"..."}
+NEXT_PUBLIC_BINANCE_API_KEY=your_binance_api_key
+BINANCE_API_SECRET=your_binance_api_secret
+NEXT_PUBLIC_AZURE_API_BASE_URL=https://your-app.azurewebsites.net
+NEXT_PUBLIC_AZURE_API_KEY=your_azure_api_key
+NEXT_PUBLIC_USE_MOCK_DATA=false
+```
+
+And these variables:
+```
+AZURE_ENV_NAME=your-environment-name
+AZURE_LOCATION=East US
+```
+
+## Project Structure
+
+```
+src/
+├── app/                    # Next.js App Router pages
+│   ├── api/               # API routes for Binance integration
+│   ├── atr-multiples/     # ATR multiples management page
+│   └── settings/          # Settings page
+├── components/            # Reusable UI components
+├── features/              # Feature-specific components
+├── hooks/                 # Custom React hooks
+├── lib/                   # Utility libraries and configurations
+├── types/                 # TypeScript type definitions
+└── utils/                 # Helper functions
+
+infra/                     # Terraform infrastructure code
+├── main.tf               # Main infrastructure configuration
+├── outputs.tf            # Output definitions
+└── main.tfvars.json      # Variables file
+
+.github/workflows/        # GitHub Actions CI/CD
+└── azure-deploy.yml      # Deployment workflow
+```
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
 - **Date Handling**: date-fns
 
 ## Project Structure
