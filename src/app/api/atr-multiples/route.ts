@@ -1,7 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 const AZURE_API_BASE_URL = process.env.NEXT_PUBLIC_AZURE_API_BASE_URL || 'https://trading-bot-app-v3.azurewebsites.net/api';
 const AZURE_API_KEY = process.env.NEXT_PUBLIC_AZURE_API_KEY || 'YWIqVJodrU_rR4jCAft_anUrP9A2pdL8ekFtmcUE0fmsAzFuK_6MFg==';
+
+interface AzureRecord {
+  RowKey: string;
+  [key: string]: unknown;
+}
+
+interface AzureResponse {
+  records: AzureRecord[];
+}
 
 export async function GET() {
   try {
@@ -29,12 +38,12 @@ export async function GET() {
       );
     }
 
-    const data = await response.json();
+    const data = await response.json() as AzureResponse;
     console.log('Azure API Response received:', data);
 
     // Transform the data to include id and backward compatibility fields
     if (data && data.records) {
-      const transformedData = data.records.map((record: any) => ({
+      const transformedData = data.records.map((record: AzureRecord) => ({
         ...record,
         id: record.RowKey,
         row: parseInt(record.RowKey, 10),
@@ -53,10 +62,13 @@ export async function GET() {
       error: 'Invalid response format from Azure endpoint',
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Proxy Error:', error);
     
-    if (error.name === 'TimeoutError') {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    const errorName = error instanceof Error ? error.name : 'Unknown';
+    
+    if (errorName === 'TimeoutError') {
       return NextResponse.json(
         { 
           success: false, 
@@ -69,7 +81,7 @@ export async function GET() {
     return NextResponse.json(
       { 
         success: false, 
-        error: error.message || 'Failed to fetch data from Azure endpoint' 
+        error: `Failed to fetch from Azure endpoint: ${errorMessage}` 
       },
       { status: 500 }
     );
