@@ -64,7 +64,11 @@ export function useBinanceOpenOrders(symbol?: string) {
     queryKey: [...queryKeys.binance.orders, symbol],
     queryFn: async () => {
       if (USE_MOCK_DATA) {
-        return { success: true, data: [] }; // Mock: no open orders
+        const mockOrders = [
+          { orderId: 1, symbol: 'BTCUSDT', price: '49000', origQty: '0.1', side: 'BUY', status: 'NEW', time: Date.now() - 5000 },
+          { orderId: 2, symbol: 'ETHUSDT', price: '3100', origQty: '1', side: 'SELL', status: 'NEW', time: Date.now() - 15000 },
+        ];
+        return { success: true, data: mockOrders };
       }
       return await binanceClient.getOpenOrders(symbol);
     },
@@ -144,6 +148,8 @@ export function useCreateAtrMultiple() {
           ...data,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
+          RowKey: Math.random().toString(36).substr(2, 9),
+          Timestamp: new Date().toISOString(),
         };
         return { success: true, data: newMultiple };
       }

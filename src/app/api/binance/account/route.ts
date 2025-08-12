@@ -70,6 +70,23 @@ class ServerBinanceClient {
 const binanceClient = new ServerBinanceClient();
 
 export async function GET() {
+  if (process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true') {
+    const mockAccountInfo = {
+      totalWalletBalance: '10000',
+      totalUnrealizedPnl: '500',
+      availableBalance: '8000',
+      assets: [
+        { asset: 'USDT', walletBalance: '10000', unrealizedProfit: '500', availableBalance: '8000' },
+        { asset: 'BUSD', walletBalance: '2000', unrealizedProfit: '0', availableBalance: '2000' },
+      ],
+      positions: [
+        { symbol: 'BTCUSDT', initialMargin: '1000', unrealizedProfit: '200', positionSide: 'LONG' },
+        { symbol: 'ETHUSDT', initialMargin: '500', unrealizedProfit: '50', positionSide: 'SHORT' },
+      ]
+    };
+    return NextResponse.json({ success: true, data: mockAccountInfo });
+  }
+
   try {
     const result = await binanceClient.getAccountInfo();
     

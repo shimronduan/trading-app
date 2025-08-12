@@ -73,6 +73,14 @@ class ServerBinanceClient {
 const binanceClient = new ServerBinanceClient();
 
 export async function GET(request: NextRequest) {
+  if (process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true') {
+    const mockTrades = [
+      { id: 1, symbol: 'BTCUSDT', price: '50000', qty: '0.1', time: Date.now() - 10000 },
+      { id: 2, symbol: 'ETHUSDT', price: '3000', qty: '1', time: Date.now() - 20000 },
+    ];
+    return NextResponse.json({ success: true, data: mockTrades });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const symbol = searchParams.get('symbol') || undefined;
