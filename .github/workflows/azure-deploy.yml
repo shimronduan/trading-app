@@ -67,38 +67,66 @@ jobs:
       with:
         name: build-files
 
-    - name: Setup Azure Developer CLI
-      uses: Azure/setup-azd@v1.0.0
+    - name: Setup Azure CLI
+      uses: azure/CLI@v1
+      with:
+        azcliversion: 2.30.0
+        inlineScript: |
+          az --version
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
         terraform_version: "1.5.0"
 
-    - name: Log in with Azure (JSON Credentials)
+    - name: Azure Login
       run: |
         echo '${{ secrets.AZURE_CREDENTIALS }}' > azure-credentials.json
-        azd auth login --client-credentials azure-credentials.json
+        az login --service-principal \
+          --username $(jq -r .clientId azure-credentials.json) \
+          --password $(jq -r .clientSecret azure-credentials.json) \
+          --tenant $(jq -r .tenantId azure-credentials.json)
+        az account set --subscription $(jq -r .subscriptionId azure-credentials.json)
         rm azure-credentials.json
 
-    - name: Azure Dev Provision
-      run: azd provision --no-prompt
-      env:
-        AZURE_ENV_NAME: ${{ vars.AZURE_ENV_NAME }}
-        AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
-        NEXT_PUBLIC_BINANCE_API_KEY: ${{ secrets.NEXT_PUBLIC_BINANCE_API_KEY }}
-        BINANCE_API_SECRET: ${{ secrets.BINANCE_API_SECRET }}
-        NEXT_PUBLIC_AZURE_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_AZURE_API_BASE_URL }}
-        NEXT_PUBLIC_AZURE_API_KEY: ${{ secrets.NEXT_PUBLIC_AZURE_API_KEY }}
-        NEXT_PUBLIC_USE_MOCK_DATA: ${{ secrets.NEXT_PUBLIC_USE_MOCK_DATA }}
+    - name: Terraform Init
+      working-directory: ./infra
+      run: terraform init
 
-    - name: Azure Dev Deploy
-      run: azd deploy --no-prompt
+    - name: Terraform Plan
+      working-directory: ./infra
+      run: terraform plan -var-file="main.tfvars.json"
       env:
-        AZURE_ENV_NAME: ${{ vars.AZURE_ENV_NAME }}
-        AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
-        NEXT_PUBLIC_BINANCE_API_KEY: ${{ secrets.NEXT_PUBLIC_BINANCE_API_KEY }}
-        BINANCE_API_SECRET: ${{ secrets.BINANCE_API_SECRET }}
-        NEXT_PUBLIC_AZURE_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_AZURE_API_BASE_URL }}
-        NEXT_PUBLIC_AZURE_API_KEY: ${{ secrets.NEXT_PUBLIC_AZURE_API_KEY }}
-        NEXT_PUBLIC_USE_MOCK_DATA: ${{ secrets.NEXT_PUBLIC_USE_MOCK_DATA }}
+        TF_VAR_environment_name: ${{ vars.AZURE_ENV_NAME }}
+        TF_VAR_location: ${{ vars.AZURE_LOCATION }}
+        TF_VAR_binance_api_key: ${{ secrets.NEXT_PUBLIC_BINANCE_API_KEY }}
+        TF_VAR_binance_api_secret: ${{ secrets.BINANCE_API_SECRET }}
+        TF_VAR_azure_api_base_url: ${{ secrets.NEXT_PUBLIC_AZURE_API_BASE_URL }}
+        TF_VAR_azure_api_key: ${{ secrets.NEXT_PUBLIC_AZURE_API_KEY }}
+        TF_VAR_use_mock_data: ${{ secrets.NEXT_PUBLIC_USE_MOCK_DATA }}
+
+    - name: Terraform Apply
+      working-directory: ./infra
+      run: terraform apply -auto-approve -var-file="main.tfvars.json"
+      env:
+        TF_VAR_environment_name: ${{ vars.AZURE_ENV_NAME }}
+        TF_VAR_location: ${{ vars.AZURE_LOCATION }}
+        TF_VAR_binance_api_key: ${{ secrets.NEXT_PUBLIC_BINANCE_API_KEY }}
+        TF_VAR_binance_api_secret: ${{ secrets.BINANCE_API_SECRET }}
+        TF_VAR_azure_api_base_url: ${{ secrets.NEXT_PUBLIC_AZURE_API_BASE_URL }}
+        TF_VAR_azure_api_key: ${{ secrets.NEXT_PUBLIC_AZURE_API_KEY }}
+        TF_VAR_use_mock_data: ${{ secrets.NEXT_PUBLIC_USE_MOCK_DATA }}
+
+    - name: Deploy Application
+      run: |
+        # Get the app service name from Terraform output
+        APP_NAME=$(cd infra && terraform output -raw SERVICE_TRADING_APP_NAME)
+        
+        # Create deployment package
+        zip -r app.zip .next package.json package-lock.json public
+        
+        # Deploy to App Service
+        az webapp deployment source config-zip \
+          --resource-group rg-${{ vars.AZURE_ENV_NAME }} \
+          --name $APP_NAME \
+          --src app.zip
