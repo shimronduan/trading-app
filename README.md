@@ -4,6 +4,17 @@ A modern, mobile-friendly Next.js dashboard for managing your futures trading bo
 
 ![Trading Dashboard Screenshot]()
 
+## 🚀 Quick Deploy to Azure
+
+Deploy this app to Azure with **Terraform** infrastructure as code! **COMPLETELY FREE with Azure Free Tier!**
+
+1. **Run setup script**: `./setup-azure.sh`
+2. **Configure GitHub secrets** (see [DEPLOYMENT.md](DEPLOYMENT.md))
+3. **Push to main branch** - Automatic deployment via GitHub Actions!
+
+📚 **[Complete Deployment Guide →](DEPLOYMENT.md)**  
+🔧 **[Terraform Infrastructure Guide →](TERRAFORM.md)**
+
 ## Features
 
 ### 📊 Dashboard
