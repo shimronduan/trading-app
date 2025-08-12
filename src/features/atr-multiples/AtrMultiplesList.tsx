@@ -1,27 +1,24 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus, Search, ArrowUpDown, Trash2, Edit } from 'lucide-react';
+import { Plus, Search, ArrowUpDown, Edit, Eye } from 'lucide-react';
 import { Card, Button, Badge, Modal, EmptyState, LoadingSpinner, useToast } from '@/components/ui';
 import { cn, debounce } from '@/utils';
-import { useAtrMultiples, useDeleteAtrMultiple } from '@/hooks';
+import { useAtrMultiples } from '@/hooks';
 import { AtrMultiple } from '@/types';
 import { AtrMultipleForm } from './AtrMultipleForm';
 
-type SortField = 'row' | 'atr_multiple' | 'close_fraction' | 'created_at';
+type SortField = 'RowKey' | 'atr_multiple' | 'close_fraction' | 'Timestamp';
 type SortDirection = 'asc' | 'desc';
 
 export function AtrMultiplesList() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortField, setSortField] = useState<SortField>('row');
+  const [sortField, setSortField] = useState<SortField>('RowKey');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [selectedMultiple, setSelectedMultiple] = useState<AtrMultiple | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [multipleToDelete, setMultipleToDelete] = useState<AtrMultiple | null>(null);
 
   const { data: multiplesResponse, isLoading, isError } = useAtrMultiples();
-  const deleteMultiple = useDeleteAtrMultiple();
   const { showToast } = useToast();
 
   const multiples = multiplesResponse?.data || [];
@@ -36,16 +33,20 @@ export function AtrMultiplesList() {
     let filtered = multiples.filter(multiple => 
       multiple.atr_multiple.toString().includes(searchTerm) ||
       multiple.close_fraction.toString().includes(searchTerm) ||
-      multiple.row.toString().includes(searchTerm)
+      (multiple.RowKey && multiple.RowKey.toString().includes(searchTerm)) ||
+      (multiple.PartitionKey && multiple.PartitionKey.includes(searchTerm))
     );
 
     filtered.sort((a, b) => {
       let aValue: any = a[sortField];
       let bValue: any = b[sortField];
 
-      if (sortField === 'created_at') {
+      if (sortField === 'Timestamp') {
         aValue = new Date(aValue || 0).getTime();
         bValue = new Date(bValue || 0).getTime();
+      } else if (sortField === 'RowKey') {
+        aValue = parseInt(aValue, 10) || 0;
+        bValue = parseInt(bValue, 10) || 0;
       }
 
       if (sortDirection === 'asc') {
@@ -73,26 +74,7 @@ export function AtrMultiplesList() {
   };
 
   const handleDelete = (multiple: AtrMultiple) => {
-    setMultipleToDelete(multiple);
-    setIsDeleteModalOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!multipleToDelete?.id) return;
-
-    try {
-      const result = await deleteMultiple.mutateAsync(multipleToDelete.id);
-      if (result.success) {
-        showToast('ATR multiple deleted successfully', 'success');
-      } else {
-        showToast(result.error || 'Failed to delete ATR multiple', 'error');
-      }
-    } catch (error: any) {
-      showToast(error.message || 'Failed to delete ATR multiple', 'error');
-    } finally {
-      setIsDeleteModalOpen(false);
-      setMultipleToDelete(null);
-    }
+    showToast('This data source is read-only. ATR multiples cannot be deleted.', 'error');
   };
 
   const handleFormClose = () => {
@@ -130,9 +112,25 @@ export function AtrMultiplesList() {
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
             Error Loading ATR Multiples
           </h3>
-          <p className="text-gray-500 dark:text-gray-400">
-            Failed to load ATR multiples. Please try again.
+          <p className="text-gray-500 dark:text-gray-400 mb-4">
+            Failed to load ATR multiples from Azure endpoint. This might be due to network connectivity or CORS issues.
           </p>
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4 text-left max-w-md mx-auto">
+            <h4 className="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">Troubleshooting:</h4>
+            <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+              <li>• Check your internet connection</li>
+              <li>• Verify the Azure endpoint is accessible</li>
+              <li>• Ensure the API key is correct</li>
+              <li>• Try refreshing the page</li>
+            </ul>
+          </div>
+          <Button 
+            onClick={() => window.location.reload()} 
+            className="mt-4"
+            variant="primary"
+          >
+            Retry
+          </Button>
         </div>
       </Card>
     );
@@ -147,16 +145,14 @@ export function AtrMultiplesList() {
             ATR Multiples
           </h2>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Manage your ATR multiple settings for trading bot configuration.
+            View ATR multiple settings from your Azure trading bot configuration (Read-only).
           </p>
         </div>
-        <Button
-          onClick={() => setIsFormOpen(true)}
-          className="w-full sm:w-auto"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add ATR Multiple
-        </Button>
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md px-3 py-2">
+          <span className="text-sm text-blue-800 dark:text-blue-200">
+            Data Source: Azure Functions
+          </span>
+        </div>
       </div>
 
       {/* Search and Stats */}
@@ -166,7 +162,7 @@ export function AtrMultiplesList() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <input
               type="text"
-              placeholder="Search by multiple, fraction, or row..."
+              placeholder="Search by multiple, fraction, type, or row..."
               className="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               onChange={(e) => debouncedSearch(e.target.value)}
             />
@@ -184,14 +180,8 @@ export function AtrMultiplesList() {
         {filteredAndSortedMultiples.length === 0 ? (
           <EmptyState
             title="No ATR multiples found"
-            description={searchTerm ? "No multiples match your search criteria." : "Get started by adding your first ATR multiple."}
-            icon={<Plus className="h-12 w-12" />}
-            action={
-              <Button onClick={() => setIsFormOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add ATR Multiple
-              </Button>
-            }
+            description={searchTerm ? "No multiples match your search criteria." : "No ATR multiples are currently available from the Azure endpoint."}
+            icon={<Search className="h-12 w-12" />}
           />
         ) : (
           <div className="overflow-x-auto">
@@ -199,16 +189,19 @@ export function AtrMultiplesList() {
               <thead>
                 <tr>
                   <th className="px-4 py-3 text-left">
-                    <SortButton field="row">Row</SortButton>
+                    <SortButton field="RowKey">Row</SortButton>
+                  </th>
+                  <th className="px-4 py-3 text-left">
+                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</span>
                   </th>
                   <th className="px-4 py-3 text-left">
                     <SortButton field="atr_multiple">ATR Multiple</SortButton>
                   </th>
                   <th className="px-4 py-3 text-left">
-                    <SortButton field="close_fraction">Close Fraction</SortButton>
+                    <SortButton field="close_fraction">Close Fraction (%)</SortButton>
                   </th>
                   <th className="px-4 py-3 text-left">
-                    <SortButton field="created_at">Created</SortButton>
+                    <SortButton field="Timestamp">Updated</SortButton>
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Actions
@@ -217,21 +210,26 @@ export function AtrMultiplesList() {
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredAndSortedMultiples.map((multiple) => (
-                  <tr key={multiple.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <tr key={multiple.id || multiple.RowKey} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                     <td className="px-4 py-3 whitespace-nowrap">
                       <Badge variant="default">
-                        {multiple.row}
+                        {multiple.RowKey}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <Badge variant={multiple.PartitionKey === 'tp' ? 'success' : 'warning'}>
+                        {multiple.PartitionKey === 'tp' ? 'Take Profit' : 'Trailing Stop'}
                       </Badge>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                       {multiple.atr_multiple}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {multiple.close_fraction}
+                      {multiple.close_fraction}%
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {multiple.created_at 
-                        ? new Date(multiple.created_at).toLocaleDateString()
+                      {multiple.Timestamp 
+                        ? new Date(multiple.Timestamp).toLocaleDateString()
                         : 'N/A'
                       }
                     </td>
@@ -243,15 +241,7 @@ export function AtrMultiplesList() {
                           onClick={() => handleEdit(multiple)}
                           className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
                         >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(multiple)}
-                          className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                        >
-                          <Trash2 className="h-4 w-4" />
+                          <Eye className="h-4 w-4" />
                         </Button>
                       </div>
                     </td>
@@ -268,7 +258,7 @@ export function AtrMultiplesList() {
         <Modal
           isOpen={isFormOpen}
           onClose={handleFormClose}
-          title={selectedMultiple ? 'Edit ATR Multiple' : 'Add ATR Multiple'}
+          title="View ATR Multiple"
           size="md"
         >
           <AtrMultipleForm
@@ -276,48 +266,6 @@ export function AtrMultiplesList() {
             onSuccess={handleFormClose}
             onCancel={handleFormClose}
           />
-        </Modal>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {isDeleteModalOpen && multipleToDelete && (
-        <Modal
-          isOpen={isDeleteModalOpen}
-          onClose={() => setIsDeleteModalOpen(false)}
-          title="Delete ATR Multiple"
-          size="sm"
-        >
-          <div className="space-y-4">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Are you sure you want to delete this ATR multiple? This action cannot be undone.
-            </p>
-            <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
-              <p className="text-sm">
-                <span className="font-medium">Row:</span> {multipleToDelete.row}
-              </p>
-              <p className="text-sm">
-                <span className="font-medium">ATR Multiple:</span> {multipleToDelete.atr_multiple}
-              </p>
-              <p className="text-sm">
-                <span className="font-medium">Close Fraction:</span> {multipleToDelete.close_fraction}
-              </p>
-            </div>
-            <div className="flex justify-end space-x-3">
-              <Button
-                variant="secondary"
-                onClick={() => setIsDeleteModalOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="danger"
-                onClick={confirmDelete}
-                isLoading={deleteMultiple.isPending}
-              >
-                Delete
-              </Button>
-            </div>
-          </div>
         </Modal>
       )}
     </div>

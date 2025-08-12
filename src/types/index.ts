@@ -110,23 +110,32 @@ export interface BinanceOrder {
 // ATR Multiples Types
 export interface AtrMultiple {
   id?: string;
+  PartitionKey: string;
+  RowKey: string;
   atr_multiple: number;
   close_fraction: number;
-  row: number;
+  Timestamp: string;
+  // Legacy fields for backward compatibility
+  row?: number;
   created_at?: string;
   updated_at?: string;
+}
+
+export interface AtrMultiplesResponse {
+  records: AtrMultiple[];
+  count: number;
 }
 
 export interface CreateAtrMultipleRequest {
   atr_multiple: number;
   close_fraction: number;
-  row: number;
+  PartitionKey: string;
 }
 
 export interface UpdateAtrMultipleRequest {
   atr_multiple?: number;
   close_fraction?: number;
-  row?: number;
+  PartitionKey?: string;
 }
 
 // Dashboard Data Types
@@ -167,7 +176,7 @@ export interface ApiResponse<T> {
 export interface AtrMultipleFormData {
   atr_multiple: number;
   close_fraction: number;
-  row: number;
+  PartitionKey: string;
 }
 
 // Chart Data Types
