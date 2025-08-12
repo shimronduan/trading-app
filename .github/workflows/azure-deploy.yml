@@ -89,6 +89,15 @@ jobs:
         az account set --subscription $(jq -r .subscriptionId azure-credentials.json)
         rm azure-credentials.json
 
+    - name: Setup Terraform Authentication
+      run: |
+        echo '${{ secrets.AZURE_CREDENTIALS }}' > azure-credentials.json
+        echo "ARM_CLIENT_ID=$(jq -r .clientId azure-credentials.json)" >> $GITHUB_ENV
+        echo "ARM_CLIENT_SECRET=$(jq -r .clientSecret azure-credentials.json)" >> $GITHUB_ENV
+        echo "ARM_SUBSCRIPTION_ID=$(jq -r .subscriptionId azure-credentials.json)" >> $GITHUB_ENV
+        echo "ARM_TENANT_ID=$(jq -r .tenantId azure-credentials.json)" >> $GITHUB_ENV
+        rm azure-credentials.json
+
     - name: Terraform Init
       working-directory: ./infra
       run: terraform init

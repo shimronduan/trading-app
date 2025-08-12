@@ -53,6 +53,13 @@ terraform {
       version = "~>1.2"
     }
   }
+  
+  backend "azurerm" {
+    resource_group_name  = "tfstate-rg"
+    storage_account_name = "tfstatesa17329"
+    container_name       = "trading-app"
+    key                  = "terraform.tfstate"
+  }
 }
 
 provider "azurerm" {
