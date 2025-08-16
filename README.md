@@ -145,11 +145,11 @@ The app integrates with Binance Futures API to fetch:
 For ATR multiples management, the app expects these endpoints:
 
 ```
-GET    /api/atr-multiples       # List all ATR multiples
-GET    /api/atr-multiples/:id   # Get specific multiple
-POST   /api/atr-multiples       # Create new multiple
-PUT    /api/atr-multiples/:id   # Update existing multiple
-DELETE /api/atr-multiples/:id   # Delete multiple
+GET    /api/tp_sl          # List all ATR multiples
+GET    /api/tp_sl/:id      # Get specific multiple
+POST   /api/tp_sl          # Create new multiple
+PUT    /api/tp_sl/:id      # Update existing multiple
+DELETE /api/tp_sl/:id      # Delete multiple
 ```
 
 **Request/Response Format**:

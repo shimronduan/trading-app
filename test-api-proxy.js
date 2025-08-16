@@ -5,7 +5,7 @@ async function testApiProxy() {
   try {
     console.log('Testing Next.js API proxy...');
     
-    const response = await axios.get('http://localhost:3000/api/atr-multiples');
+    const response = await axios.get('http://localhost:3000/api/tp_sl');
     
     console.log('Status:', response.status);
     console.log('Response:', JSON.stringify(response.data, null, 2));

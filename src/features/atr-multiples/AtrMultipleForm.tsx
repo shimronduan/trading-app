@@ -47,8 +47,43 @@ export function AtrMultipleForm({ multiple, onSuccess, onCancel }: AtrMultipleFo
   });
 
   const onSubmit = async (data: AtrMultipleFormData) => {
-    // Since the Azure endpoint is read-only, we'll show an error message
-    showToast('This data source is read-only. ATR multiples cannot be modified.', 'error');
+    try {
+      if (isEditing) {
+        // Update existing record
+        const result = await updateMultiple.mutateAsync({
+          id: multiple.RowKey,
+          data: {
+            atr_multiple: data.atr_multiple,
+            close_fraction: data.close_fraction,
+            PartitionKey: data.PartitionKey,
+          },
+        });
+
+        if (result.success) {
+          showToast('ATR multiple updated successfully!', 'success');
+          onSuccess();
+        } else {
+          showToast(result.error || 'Failed to update ATR multiple', 'error');
+        }
+      } else {
+        // Create new record
+        const result = await createMultiple.mutateAsync({
+          atr_multiple: data.atr_multiple,
+          close_fraction: data.close_fraction,
+          PartitionKey: data.PartitionKey,
+        });
+
+        if (result.success) {
+          showToast('ATR multiple created successfully!', 'success');
+          onSuccess();
+        } else {
+          showToast(result.error || 'Failed to create ATR multiple', 'error');
+        }
+      }
+    } catch (error) {
+      console.error('Form submission error:', error);
+      showToast('An unexpected error occurred', 'error');
+    }
   };
 
   const handleReset = () => {
@@ -66,7 +101,6 @@ export function AtrMultipleForm({ multiple, onSuccess, onCancel }: AtrMultipleFo
           id="PartitionKey"
           {...register('PartitionKey')}
           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          disabled
         >
           <option value="tp">Take Profit (tp)</option>
           <option value="tsl">Trailing Stop Loss (tsl)</option>
@@ -77,7 +111,7 @@ export function AtrMultipleForm({ multiple, onSuccess, onCancel }: AtrMultipleFo
           </p>
         )}
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          This data source is read-only. Values cannot be modified.
+          Select the type of ATR multiple configuration.
         </p>
       </div>
 
@@ -93,10 +127,8 @@ export function AtrMultipleForm({ multiple, onSuccess, onCancel }: AtrMultipleFo
           max="10"
           step="0.1"
           {...register('atr_multiple', { valueAsNumber: true })}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           placeholder="Enter ATR multiple (e.g., 1.5)"
-          disabled
-          readOnly
         />
         {errors.atr_multiple && (
           <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -104,7 +136,7 @@ export function AtrMultipleForm({ multiple, onSuccess, onCancel }: AtrMultipleFo
           </p>
         )}
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Multiplier for Average True Range calculation (0.1 - 10.0) - Read only
+          Multiplier for Average True Range calculation (0.1 - 10.0)
         </p>
       </div>
 
@@ -120,10 +152,8 @@ export function AtrMultipleForm({ multiple, onSuccess, onCancel }: AtrMultipleFo
           max="100"
           step="1"
           {...register('close_fraction', { valueAsNumber: true })}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           placeholder="Enter close fraction percentage (e.g., 25)"
-          disabled
-          readOnly
         />
         {errors.close_fraction && (
           <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -131,24 +161,27 @@ export function AtrMultipleForm({ multiple, onSuccess, onCancel }: AtrMultipleFo
           </p>
         )}
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Percentage of position to close when profit target is reached (0 - 100%) - Read only
+          Percentage of position to close when profit target is reached (0 - 100%)
         </p>
       </div>
 
       {/* Information notice */}
-      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4">
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-4">
         <div className="flex">
           <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
           </div>
           <div className="ml-3">
-            <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-              Read-Only Data Source
+            <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
+              Azure Table Storage Integration
             </h3>
-            <p className="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
-              This data is fetched from a read-only Azure endpoint. ATR multiples cannot be created, updated, or deleted through this interface.
+            <p className="mt-1 text-sm text-blue-700 dark:text-blue-300">
+              {isEditing 
+                ? 'Edit and save changes to your ATR multiple configuration in Azure Table Storage.'
+                : 'Create a new ATR multiple configuration that will be saved to Azure Table Storage.'
+              }
             </p>
           </div>
         </div>
@@ -161,7 +194,23 @@ export function AtrMultipleForm({ multiple, onSuccess, onCancel }: AtrMultipleFo
           variant="secondary"
           onClick={onCancel}
         >
-          Close
+          Cancel
+        </Button>
+        {!isEditing && (
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={handleReset}
+          >
+            Reset
+          </Button>
+        )}
+        <Button
+          type="submit"
+          variant="primary"
+          isLoading={isSubmitting}
+        >
+          {isEditing ? 'Update ATR Multiple' : 'Create ATR Multiple'}
         </Button>
       </div>
     </form>

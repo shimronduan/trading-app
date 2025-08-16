@@ -18,7 +18,7 @@ export function AtrMultiplesList() {
   const [selectedMultiple, setSelectedMultiple] = useState<AtrMultiple | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  const { data: multiplesResponse, isLoading, isError } = useAtrMultiples();
+  const { data: multiplesResponse, isLoading, isError, refetch } = useAtrMultiples();
   const { showToast } = useToast();
 
   const multiples = multiplesResponse?.data || [];
@@ -74,14 +74,35 @@ export function AtrMultiplesList() {
     setIsFormOpen(true);
   };
 
-  const handleDelete = (multiple: AtrMultiple) => {
-    showToast('This data source is read-only. ATR multiples cannot be deleted.', 'error');
+  const handleDelete = async (multiple: AtrMultiple) => {
+    if (window.confirm('Are you sure you want to delete this ATR multiple? This action cannot be undone.')) {
+      try {
+        const response = await fetch(`/api/tp_sl/${multiple.RowKey}`, {
+          method: 'DELETE',
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          showToast('ATR multiple deleted successfully!', 'success');
+          // Refetch the data to update the list
+          refetch();
+        } else {
+          showToast(result.error || 'Failed to delete ATR multiple', 'error');
+        }
+      } catch (error) {
+        console.error('Delete error:', error);
+        showToast('An error occurred while deleting', 'error');
+      }
+    }
   };
 
   const handleFormClose = () => {
     console.log('Closing modal'); // Debug log
     setIsFormOpen(false);
     setSelectedMultiple(null);
+    // Refetch data to ensure we have the latest
+    refetch();
   };
 
   const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
@@ -147,13 +168,25 @@ export function AtrMultiplesList() {
             ATR Multiples
           </h2>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            View ATR multiple settings from your Azure trading bot configuration (Read-only).
+            Manage ATR multiple settings for your Azure trading bot configuration.
           </p>
         </div>
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md px-3 py-2">
-          <span className="text-sm text-blue-800 dark:text-blue-200">
-            Data Source: Azure Functions
-          </span>
+        <div className="flex items-center space-x-4">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md px-3 py-2">
+            <span className="text-sm text-blue-800 dark:text-blue-200">
+              Data Source: Azure Table Storage
+            </span>
+          </div>
+          <Button
+            onClick={() => {
+              setSelectedMultiple(null);
+              setIsFormOpen(true);
+            }}
+            className="inline-flex items-center"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add New ATR Multiple
+          </Button>
         </div>
       </div>
 
@@ -245,6 +278,16 @@ export function AtrMultiplesList() {
                         >
                           <Edit2Icon className="h-4 w-4" />
                         </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(multiple)}
+                          className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H9a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -260,7 +303,7 @@ export function AtrMultiplesList() {
         <Modal
           isOpen={isFormOpen}
           onClose={handleFormClose}
-          title="View ATR Multiple"
+          title={selectedMultiple ? "Edit ATR Multiple" : "Create New ATR Multiple"}
           size="md"
         >
           <AtrMultipleForm
