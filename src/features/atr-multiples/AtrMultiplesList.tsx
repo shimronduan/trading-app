@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus, Search, ArrowUpDown, Edit, Eye } from 'lucide-react';
+import { Plus, Search, ArrowUpDown, Edit, Eye, Edit2Icon } from 'lucide-react';
 import { Card, Button, Badge, Modal, EmptyState, LoadingSpinner, useToast } from '@/components/ui';
 import { cn, debounce } from '@/utils';
 import { useAtrMultiples } from '@/hooks';
@@ -69,6 +69,7 @@ export function AtrMultiplesList() {
   };
 
   const handleEdit = (multiple: AtrMultiple) => {
+    console.log('Opening modal for multiple:', multiple); // Debug log
     setSelectedMultiple(multiple);
     setIsFormOpen(true);
   };
@@ -78,6 +79,7 @@ export function AtrMultiplesList() {
   };
 
   const handleFormClose = () => {
+    console.log('Closing modal'); // Debug log
     setIsFormOpen(false);
     setSelectedMultiple(null);
   };
@@ -241,7 +243,7 @@ export function AtrMultiplesList() {
                           onClick={() => handleEdit(multiple)}
                           className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
                         >
-                          <Eye className="h-4 w-4" />
+                          <Edit2Icon className="h-4 w-4" />
                         </Button>
                       </div>
                     </td>
