@@ -245,7 +245,7 @@ export function AtrMultiplesList() {
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredAndSortedMultiples.map((multiple) => (
-                  <tr key={multiple.id || multiple.RowKey} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <tr key={`${multiple.PartitionKey}-${multiple.RowKey}`} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                     <td className="px-4 py-3 whitespace-nowrap">
                       <Badge variant="default">
                         {multiple.RowKey}
