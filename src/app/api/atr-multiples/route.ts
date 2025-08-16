@@ -93,11 +93,39 @@ export async function POST(request: Request) {
     const data = await request.json();
     console.log('Creating ATR multiple:', data);
 
+    // First, fetch existing records to determine the next RowKey
+    const existingResponse = await fetch(`${AZURE_API_BASE_URL}/tp_sl?code=${AZURE_API_KEY}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'TradingApp/1.0',
+      },
+      signal: AbortSignal.timeout(10000),
+    });
+
+    let nextRowKey = 1;
+    if (existingResponse.ok) {
+      const existingData = await existingResponse.json() as AzureResponse;
+      if (existingData && existingData.records && existingData.records.length > 0) {
+        // Find the highest RowKey for the same PartitionKey
+        const samePartitionRecords = existingData.records.filter(
+          record => record.PartitionKey === data.PartitionKey
+        );
+        if (samePartitionRecords.length > 0) {
+          const maxRowKey = Math.max(...samePartitionRecords.map(record => parseInt(record.RowKey, 10) || 0));
+          nextRowKey = maxRowKey + 1;
+        }
+      }
+    }
+
     const atrMultipleData = {
       PartitionKey: data.PartitionKey,
+      RowKey: nextRowKey.toString(),
       atr_multiple: data.atr_multiple,
       close_fraction: data.close_fraction,
     };
+
+    console.log('Creating ATR multiple with RowKey:', atrMultipleData);
 
     // Call Azure Function to create the record using POST to tp_sl endpoint
     const response = await fetch(`${AZURE_API_BASE_URL}/tp_sl?code=${AZURE_API_KEY}`, {

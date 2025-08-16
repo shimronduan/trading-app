@@ -13,7 +13,7 @@ const atrMultipleSchema = z.object({
     .min(0.1, 'ATR multiple must be at least 0.1')
     .max(10, 'ATR multiple must be at most 10'),
   close_fraction: z.number()
-    .min(0.01, 'Close fraction must be at least 0.01')
+    .min(0, 'Close fraction must be at least 0%')
     .max(100, 'Close fraction must be at most 100'),
   PartitionKey: z.string()
     .min(1, 'Partition key is required')
@@ -41,7 +41,7 @@ export function AtrMultipleForm({ multiple, onSuccess, onCancel }: AtrMultipleFo
     resolver: zodResolver(atrMultipleSchema),
     defaultValues: {
       atr_multiple: multiple?.atr_multiple || 1.5,
-      close_fraction: multiple?.close_fraction || 25,
+      close_fraction: multiple?.close_fraction || 0,
       PartitionKey: multiple?.PartitionKey || 'tp',
     },
   });
@@ -153,7 +153,7 @@ export function AtrMultipleForm({ multiple, onSuccess, onCancel }: AtrMultipleFo
           step="1"
           {...register('close_fraction', { valueAsNumber: true })}
           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="Enter close fraction percentage (e.g., 25)"
+          placeholder="Enter close fraction percentage (e.g., 25 or 0 for no close)"
         />
         {errors.close_fraction && (
           <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -161,7 +161,7 @@ export function AtrMultipleForm({ multiple, onSuccess, onCancel }: AtrMultipleFo
           </p>
         )}
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Percentage of position to close when profit target is reached (0 - 100%)
+          Percentage of position to close when profit target is reached (0 - 100%). Use 0% for no automatic closing.
         </p>
       </div>
 
