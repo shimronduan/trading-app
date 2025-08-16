@@ -23,6 +23,57 @@ export function AtrMultiplesList() {
 
   const multiples = multiplesResponse?.data || [];
 
+    // Helper function to format timestamps safely
+  const formatTimestamp = (timestamp: string | number | undefined | null): string => {
+    if (!timestamp) return 'N/A';
+    
+    try {
+      // Handle various timestamp formats
+      let date: Date;
+      
+      // If it's a valid date string
+      if (typeof timestamp === 'string') {
+        // Handle Azure's malformed timestamp format with both timezone offset and Z
+        let cleanedTimestamp = timestamp;
+        
+        // Fix Azure's format: '2025-08-10T11:57:46.323396+00:00Z' -> '2025-08-10T11:57:46.323396+00:00'
+        if (timestamp.includes('+') && timestamp.endsWith('Z')) {
+          cleanedTimestamp = timestamp.slice(0, -1); // Remove the trailing 'Z'
+        }
+        
+        // Try parsing as ISO string first (Azure Table Storage format)
+        date = new Date(cleanedTimestamp);
+        
+        // If parsing failed, try other common formats
+        if (isNaN(date.getTime())) {
+          // Try parsing as timestamp number if it's a string of numbers
+          if (/^\d+$/.test(timestamp)) {
+            date = new Date(parseInt(timestamp, 10));
+          } else {
+            // Try the original timestamp if cleaning didn't work
+            date = new Date(timestamp);
+          }
+        }
+      } else if (typeof timestamp === 'number') {
+        date = new Date(timestamp);
+      } else {
+        return 'N/A';
+      }
+      
+      // Final check if date is valid
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid timestamp format:', timestamp);
+        return 'N/A';
+      }
+      
+      // Return formatted date with time for better UX
+      return date.toLocaleString();
+    } catch (error) {
+      console.error('Error formatting timestamp:', timestamp, error);
+      return 'N/A';
+    }
+  };
+
   // Debounced search function
   const debouncedSearch = debounce((term: string) => {
     setSearchTerm(term);
@@ -42,8 +93,11 @@ export function AtrMultiplesList() {
       let bValue: any = b[sortField];
 
       if (sortField === 'Timestamp') {
-        aValue = new Date(aValue || 0).getTime();
-        bValue = new Date(bValue || 0).getTime();
+        const dateA = new Date(aValue || 0);
+        const dateB = new Date(bValue || 0);
+        // Handle invalid dates by putting them at the end
+        aValue = isNaN(dateA.getTime()) ? 0 : dateA.getTime();
+        bValue = isNaN(dateB.getTime()) ? 0 : dateB.getTime();
       } else if (sortField === 'RowKey') {
         aValue = parseInt(aValue, 10) || 0;
         bValue = parseInt(bValue, 10) || 0;
@@ -263,10 +317,7 @@ export function AtrMultiplesList() {
                       {multiple.close_fraction}%
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {multiple.Timestamp 
-                        ? new Date(multiple.Timestamp).toLocaleDateString()
-                        : 'N/A'
-                      }
+                      {formatTimestamp(multiple.Timestamp)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
                       <div className="flex items-center justify-end space-x-2">
