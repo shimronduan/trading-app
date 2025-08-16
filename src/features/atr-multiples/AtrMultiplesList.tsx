@@ -216,31 +216,33 @@ export function AtrMultiplesList() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            ATR Multiples
-          </h2>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Manage ATR multiple settings for your Azure trading bot configuration.
-          </p>
-        </div>
-        <div className="flex items-center space-x-4">
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md px-3 py-2">
-            <span className="text-sm text-blue-800 dark:text-blue-200">
-              Data Source: Azure Table Storage
-            </span>
+      <div className="flex flex-col space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              ATR Multiples
+            </h2>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Manage ATR multiple settings for your Azure trading bot configuration.
+            </p>
           </div>
-          <Button
-            onClick={() => {
-              setSelectedMultiple(null);
-              setIsFormOpen(true);
-            }}
-            className="inline-flex items-center"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add New ATR Multiple
-          </Button>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md px-3 py-2 w-full sm:w-auto">
+              <span className="text-sm text-blue-800 dark:text-blue-200">
+                Data Source: Azure Table Storage
+              </span>
+            </div>
+            <Button
+              onClick={() => {
+                setSelectedMultiple(null);
+                setIsFormOpen(true);
+              }}
+              className="inline-flex items-center justify-center w-full sm:w-auto"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add New ATR Multiple
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -264,7 +266,7 @@ export function AtrMultiplesList() {
         </div>
       </Card>
 
-      {/* Table */}
+      {/* Desktop Table / Mobile Cards */}
       <Card>
         {filteredAndSortedMultiples.length === 0 ? (
           <EmptyState
@@ -273,79 +275,203 @@ export function AtrMultiplesList() {
             icon={<Search className="h-12 w-12" />}
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead>
-                <tr>
-                  <th className="px-4 py-3 text-left">
-                    <SortButton field="RowKey">Row</SortButton>
-                  </th>
-                  <th className="px-4 py-3 text-left">
-                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</span>
-                  </th>
-                  <th className="px-4 py-3 text-left">
-                    <SortButton field="atr_multiple">ATR Multiple</SortButton>
-                  </th>
-                  <th className="px-4 py-3 text-left">
-                    <SortButton field="close_fraction">Close Fraction (%)</SortButton>
-                  </th>
-                  <th className="px-4 py-3 text-left">
-                    <SortButton field="Timestamp">Updated</SortButton>
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredAndSortedMultiples.map((multiple) => (
-                  <tr key={`${multiple.PartitionKey}-${multiple.RowKey}`} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                    <td className="px-4 py-3 whitespace-nowrap">
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead>
+                  <tr>
+                    <th className="px-4 py-3 text-left">
+                      <SortButton field="RowKey">Row</SortButton>
+                    </th>
+                    <th className="px-4 py-3 text-left">
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</span>
+                    </th>
+                    <th className="px-4 py-3 text-left">
+                      <SortButton field="atr_multiple">ATR Multiple</SortButton>
+                    </th>
+                    <th className="px-4 py-3 text-left">
+                      <SortButton field="close_fraction">Close Fraction (%)</SortButton>
+                    </th>
+                    <th className="px-4 py-3 text-left">
+                      <SortButton field="Timestamp">Updated</SortButton>
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {filteredAndSortedMultiples.map((multiple) => (
+                    <tr key={`${multiple.PartitionKey}-${multiple.RowKey}`} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <Badge variant="default">
+                          {multiple.RowKey}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <Badge variant={multiple.PartitionKey === 'tp' ? 'success' : 'warning'}>
+                          {multiple.PartitionKey === 'tp' ? 'Take Profit' : 'Trailing Stop'}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                        {multiple.atr_multiple}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        {multiple.close_fraction}%
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        {formatTimestamp(multiple.Timestamp)}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
+                        <div className="flex items-center justify-end space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(multiple)}
+                            className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                          >
+                            <Edit2Icon className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(multiple)}
+                            className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                          >
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H9a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="lg:hidden space-y-4">
+              {/* Mobile Sort Controls */}
+              <div className="flex flex-wrap items-center gap-2 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mr-2">Sort by:</span>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => handleSort('RowKey')}
+                    className={cn(
+                      'px-3 py-1 text-xs rounded-full transition-colors',
+                      sortField === 'RowKey'
+                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                        : 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500'
+                    )}
+                  >
+                    Row {sortField === 'RowKey' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  </button>
+                  <button
+                    onClick={() => handleSort('atr_multiple')}
+                    className={cn(
+                      'px-3 py-1 text-xs rounded-full transition-colors',
+                      sortField === 'atr_multiple'
+                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                        : 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500'
+                    )}
+                  >
+                    Multiple {sortField === 'atr_multiple' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  </button>
+                  <button
+                    onClick={() => handleSort('close_fraction')}
+                    className={cn(
+                      'px-3 py-1 text-xs rounded-full transition-colors',
+                      sortField === 'close_fraction'
+                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                        : 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500'
+                    )}
+                  >
+                    Fraction {sortField === 'close_fraction' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  </button>
+                  <button
+                    onClick={() => handleSort('Timestamp')}
+                    className={cn(
+                      'px-3 py-1 text-xs rounded-full transition-colors',
+                      sortField === 'Timestamp'
+                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                        : 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500'
+                    )}
+                  >
+                    Updated {sortField === 'Timestamp' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  </button>
+                </div>
+              </div>
+
+              {/* Mobile Cards */}
+              {filteredAndSortedMultiples.map((multiple) => (
+                <div 
+                  key={`${multiple.PartitionKey}-${multiple.RowKey}`} 
+                  className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3 hover:shadow-md transition-shadow"
+                >
+                  {/* Header with Row and Type */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
                       <Badge variant="default">
-                        {multiple.RowKey}
+                        Row {multiple.RowKey}
                       </Badge>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
                       <Badge variant={multiple.PartitionKey === 'tp' ? 'success' : 'warning'}>
                         {multiple.PartitionKey === 'tp' ? 'Take Profit' : 'Trailing Stop'}
                       </Badge>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                      {multiple.atr_multiple}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {multiple.close_fraction}%
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {formatTimestamp(multiple.Timestamp)}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
-                      <div className="flex items-center justify-end space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(multiple)}
-                          className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                        >
-                          <Edit2Icon className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(multiple)}
-                          className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                        >
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H9a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </Button>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(multiple)}
+                        className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-2"
+                      >
+                        <Edit2Icon className="h-5 w-5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(multiple)}
+                        className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-2"
+                      >
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H9a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Main Data */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+                        ATR Multiple
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {multiple.atr_multiple}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+                        Close Fraction
+                      </div>
+                      <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {multiple.close_fraction}%
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer with Timestamp */}
+                  <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Updated: {formatTimestamp(multiple.Timestamp)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </Card>
 
