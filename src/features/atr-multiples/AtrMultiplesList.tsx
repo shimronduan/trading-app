@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus, Search, ArrowUpDown, Edit, Eye } from 'lucide-react';
+import { Plus, Search, ArrowUpDown, Edit, Eye, Edit2Icon } from 'lucide-react';
 import { Card, Button, Badge, Modal, EmptyState, LoadingSpinner, useToast } from '@/components/ui';
 import { cn, debounce } from '@/utils';
 import { useAtrMultiples } from '@/hooks';
@@ -18,10 +18,61 @@ export function AtrMultiplesList() {
   const [selectedMultiple, setSelectedMultiple] = useState<AtrMultiple | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  const { data: multiplesResponse, isLoading, isError } = useAtrMultiples();
+  const { data: multiplesResponse, isLoading, isError, refetch } = useAtrMultiples();
   const { showToast } = useToast();
 
   const multiples = multiplesResponse?.data || [];
+
+    // Helper function to format timestamps safely
+  const formatTimestamp = (timestamp: string | number | undefined | null): string => {
+    if (!timestamp) return 'N/A';
+    
+    try {
+      // Handle various timestamp formats
+      let date: Date;
+      
+      // If it's a valid date string
+      if (typeof timestamp === 'string') {
+        // Handle Azure's malformed timestamp format with both timezone offset and Z
+        let cleanedTimestamp = timestamp;
+        
+        // Fix Azure's format: '2025-08-10T11:57:46.323396+00:00Z' -> '2025-08-10T11:57:46.323396+00:00'
+        if (timestamp.includes('+') && timestamp.endsWith('Z')) {
+          cleanedTimestamp = timestamp.slice(0, -1); // Remove the trailing 'Z'
+        }
+        
+        // Try parsing as ISO string first (Azure Table Storage format)
+        date = new Date(cleanedTimestamp);
+        
+        // If parsing failed, try other common formats
+        if (isNaN(date.getTime())) {
+          // Try parsing as timestamp number if it's a string of numbers
+          if (/^\d+$/.test(timestamp)) {
+            date = new Date(parseInt(timestamp, 10));
+          } else {
+            // Try the original timestamp if cleaning didn't work
+            date = new Date(timestamp);
+          }
+        }
+      } else if (typeof timestamp === 'number') {
+        date = new Date(timestamp);
+      } else {
+        return 'N/A';
+      }
+      
+      // Final check if date is valid
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid timestamp format:', timestamp);
+        return 'N/A';
+      }
+      
+      // Return formatted date with time for better UX
+      return date.toLocaleString();
+    } catch (error) {
+      console.error('Error formatting timestamp:', timestamp, error);
+      return 'N/A';
+    }
+  };
 
   // Debounced search function
   const debouncedSearch = debounce((term: string) => {
@@ -42,8 +93,11 @@ export function AtrMultiplesList() {
       let bValue: any = b[sortField];
 
       if (sortField === 'Timestamp') {
-        aValue = new Date(aValue || 0).getTime();
-        bValue = new Date(bValue || 0).getTime();
+        const dateA = new Date(aValue || 0);
+        const dateB = new Date(bValue || 0);
+        // Handle invalid dates by putting them at the end
+        aValue = isNaN(dateA.getTime()) ? 0 : dateA.getTime();
+        bValue = isNaN(dateB.getTime()) ? 0 : dateB.getTime();
       } else if (sortField === 'RowKey') {
         aValue = parseInt(aValue, 10) || 0;
         bValue = parseInt(bValue, 10) || 0;
@@ -69,17 +123,40 @@ export function AtrMultiplesList() {
   };
 
   const handleEdit = (multiple: AtrMultiple) => {
+    console.log('Opening modal for multiple:', multiple); // Debug log
     setSelectedMultiple(multiple);
     setIsFormOpen(true);
   };
 
-  const handleDelete = (multiple: AtrMultiple) => {
-    showToast('This data source is read-only. ATR multiples cannot be deleted.', 'error');
+  const handleDelete = async (multiple: AtrMultiple) => {
+    if (window.confirm('Are you sure you want to delete this ATR multiple? This action cannot be undone.')) {
+      try {
+        const response = await fetch(`/api/tp_sl/${multiple.RowKey}`, {
+          method: 'DELETE',
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          showToast('ATR multiple deleted successfully!', 'success');
+          // Refetch the data to update the list
+          refetch();
+        } else {
+          showToast(result.error || 'Failed to delete ATR multiple', 'error');
+        }
+      } catch (error) {
+        console.error('Delete error:', error);
+        showToast('An error occurred while deleting', 'error');
+      }
+    }
   };
 
   const handleFormClose = () => {
+    console.log('Closing modal'); // Debug log
     setIsFormOpen(false);
     setSelectedMultiple(null);
+    // Refetch data to ensure we have the latest
+    refetch();
   };
 
   const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
@@ -145,13 +222,25 @@ export function AtrMultiplesList() {
             ATR Multiples
           </h2>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            View ATR multiple settings from your Azure trading bot configuration (Read-only).
+            Manage ATR multiple settings for your Azure trading bot configuration.
           </p>
         </div>
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md px-3 py-2">
-          <span className="text-sm text-blue-800 dark:text-blue-200">
-            Data Source: Azure Functions
-          </span>
+        <div className="flex items-center space-x-4">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md px-3 py-2">
+            <span className="text-sm text-blue-800 dark:text-blue-200">
+              Data Source: Azure Table Storage
+            </span>
+          </div>
+          <Button
+            onClick={() => {
+              setSelectedMultiple(null);
+              setIsFormOpen(true);
+            }}
+            className="inline-flex items-center"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add New ATR Multiple
+          </Button>
         </div>
       </div>
 
@@ -210,7 +299,7 @@ export function AtrMultiplesList() {
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredAndSortedMultiples.map((multiple) => (
-                  <tr key={multiple.id || multiple.RowKey} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <tr key={`${multiple.PartitionKey}-${multiple.RowKey}`} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                     <td className="px-4 py-3 whitespace-nowrap">
                       <Badge variant="default">
                         {multiple.RowKey}
@@ -228,10 +317,7 @@ export function AtrMultiplesList() {
                       {multiple.close_fraction}%
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {multiple.Timestamp 
-                        ? new Date(multiple.Timestamp).toLocaleDateString()
-                        : 'N/A'
-                      }
+                      {formatTimestamp(multiple.Timestamp)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
                       <div className="flex items-center justify-end space-x-2">
@@ -241,7 +327,17 @@ export function AtrMultiplesList() {
                           onClick={() => handleEdit(multiple)}
                           className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
                         >
-                          <Eye className="h-4 w-4" />
+                          <Edit2Icon className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(multiple)}
+                          className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H9a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
                         </Button>
                       </div>
                     </td>
@@ -258,7 +354,7 @@ export function AtrMultiplesList() {
         <Modal
           isOpen={isFormOpen}
           onClose={handleFormClose}
-          title="View ATR Multiple"
+          title={selectedMultiple ? "Edit ATR Multiple" : "Create New ATR Multiple"}
           size="md"
         >
           <AtrMultipleForm

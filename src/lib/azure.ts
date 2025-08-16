@@ -47,7 +47,7 @@ class AzureApiClient {
   async getAtrMultiples(): Promise<ApiResponse<AtrMultiple[]>> {
     try {
       // Use Next.js API route as proxy to avoid CORS issues
-      const response = await this.client.get('/api/atr-multiples');
+      const response = await this.client.get('/api/tp_sl');
       
       if (response.data.success) {
         return {
@@ -74,7 +74,7 @@ class AzureApiClient {
   async getAtrMultiple(id: string): Promise<ApiResponse<AtrMultiple>> {
     try {
       // Use the same proxy endpoint and filter client-side
-      const response = await this.client.get('/api/atr-multiples');
+      const response = await this.client.get('/api/tp_sl');
       
       if (response.data.success && response.data.data) {
         const record = response.data.data.find((r: any) => r.RowKey === id);
@@ -105,33 +105,82 @@ class AzureApiClient {
   }
 
   /**
-   * Create a new ATR multiple (Read-only endpoint - not supported)
+   * Create a new ATR multiple using Next.js API proxy
    */
   async createAtrMultiple(data: CreateAtrMultipleRequest): Promise<ApiResponse<AtrMultiple>> {
-    return {
-      success: false,
-      error: 'Create operation not supported by this Azure endpoint. This is a read-only data source.',
-    };
+    try {
+      // Use Next.js API route as proxy to avoid CORS issues
+      const response = await this.client.post('/api/tp_sl', data);
+      
+      if (response.data.success) {
+        return {
+          success: true,
+          data: response.data.data,
+        };
+      }
+      
+      return {
+        success: false,
+        error: response.data.error || 'Failed to create ATR multiple',
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || 'Failed to create ATR multiple',
+      };
+    }
   }
 
   /**
-   * Update an existing ATR multiple (Read-only endpoint - not supported)
+   * Update an existing ATR multiple
    */
   async updateAtrMultiple(id: string, data: UpdateAtrMultipleRequest): Promise<ApiResponse<AtrMultiple>> {
-    return {
-      success: false,
-      error: 'Update operation not supported by this Azure endpoint. This is a read-only data source.',
-    };
+    try {
+      const response = await this.client.put(`/api/tp_sl/${id}`, data);
+      
+      if (response.data.success) {
+        return {
+          success: true,
+          data: response.data.data,
+        };
+      }
+      
+      return {
+        success: false,
+        error: response.data.error || 'Failed to update ATR multiple',
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || 'Failed to update ATR multiple',
+      };
+    }
   }
 
   /**
-   * Delete an ATR multiple (Read-only endpoint - not supported)
+   * Delete an ATR multiple
    */
   async deleteAtrMultiple(id: string): Promise<ApiResponse<void>> {
-    return {
-      success: false,
-      error: 'Delete operation not supported by this Azure endpoint. This is a read-only data source.',
-    };
+    try {
+      const response = await this.client.delete(`/api/tp_sl/${id}`);
+      
+      if (response.data.success) {
+        return {
+          success: true,
+          data: undefined,
+        };
+      }
+      
+      return {
+        success: false,
+        error: response.data.error || 'Failed to delete ATR multiple',
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || 'Failed to delete ATR multiple',
+      };
+    }
   }
 
   /**
