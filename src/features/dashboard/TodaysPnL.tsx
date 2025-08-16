@@ -21,32 +21,18 @@ export function TodaysPnL({ accountInfo, dailyPnl }: TodaysPnLProps) {
   
   // Calculate today's P&L percentage based on account balance
   const totalBalance = safeParseFloat(accountInfo.totalWalletBalance);
-  const todaysPnlPercentage = totalBalance > 0 ? (todaysPnlAmount / totalBalance) * 100 : 0;
-  
-  // Get yesterday's cumulative P&L to calculate the base for percentage
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayDate = yesterday.toISOString().split('T')[0];
-  
-  const sortedDailyPnl = dailyPnl.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  const todayIndex = sortedDailyPnl.findIndex(day => day.date === today);
-  
-  // Calculate portfolio value at start of today (yesterday's close)
-  let portfolioValueStartOfDay = totalBalance;
-  if (todayIndex > 0) {
-    const cumulativePnlYesterday = sortedDailyPnl
-      .slice(0, todayIndex)
-      .reduce((sum, day) => sum + day.pnl, 0);
-    portfolioValueStartOfDay = totalBalance - todaysPnlAmount;
-  }
-  
-  // More accurate percentage calculation
-  const accurateTodayPnlPercentage = portfolioValueStartOfDay > 0 
-    ? (todaysPnlAmount / portfolioValueStartOfDay) * 100 
-    : 0;
+
+  // The portfolio value at the start of the day is the current balance minus today's P&L.
+  const portfolioValueStartOfDay = totalBalance - todaysPnlAmount;
+
+  // Calculate today's return based on the portfolio value at the start of the day.
+  const todaysReturnPercentage =
+    portfolioValueStartOfDay > 0
+      ? (todaysPnlAmount / portfolioValueStartOfDay) * 100
+      : 0;
 
   const isPositive = todaysPnlAmount >= 0;
-  const isPercentagePositive = accurateTodayPnlPercentage >= 0;
+  const isPercentagePositive = todaysReturnPercentage >= 0;
 
   return (
     <Card>
@@ -120,7 +106,7 @@ export function TodaysPnL({ accountInfo, dailyPnl }: TodaysPnLProps) {
                   ? "text-green-600 dark:text-green-400" 
                   : "text-red-600 dark:text-red-400"
               )}>
-                {formatPercentage(accurateTodayPnlPercentage)}
+                {formatPercentage(todaysReturnPercentage)}
               </p>
             </div>
           </div>
