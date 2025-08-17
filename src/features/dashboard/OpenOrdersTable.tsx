@@ -84,7 +84,7 @@ export function OpenOrdersTable({ orders, isLoading }: OpenOrdersTableProps) {
 
   return (
     <Card>
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             Open Orders
@@ -94,7 +94,84 @@ export function OpenOrdersTable({ orders, isLoading }: OpenOrdersTableProps) {
           </div>
         </div>
 
-        <div className="overflow-hidden">
+        {/* Mobile Card Layout */}
+        <div className="block sm:hidden space-y-3">
+          {orders.map((order) => {
+            const quantity = safeParseFloat(order.origQty);
+            const executedQty = safeParseFloat(order.executedQty);
+            const price = safeParseFloat(order.price);
+            const fillPercentage = quantity > 0 ? (executedQty / quantity) * 100 : 0;
+            
+            return (
+              <div key={order.orderId} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="text-sm font-medium text-gray-900 dark:text-white">
+                      {order.symbol}
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      {getOrderTypeIcon(order.side, order.type)}
+                      <span className={cn(
+                        "text-xs font-medium",
+                        order.side === 'BUY' 
+                          ? "text-green-600 dark:text-green-400" 
+                          : "text-red-600 dark:text-red-400"
+                      )}>
+                        {order.side}
+                      </span>
+                    </div>
+                  </div>
+                  <span className={cn(
+                    "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
+                    getStatusColor(order.status)
+                  )}>
+                    {order.status.replace('_', ' ')}
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <span className="text-gray-500 dark:text-gray-400">Type:</span>
+                    <div className="font-medium text-gray-900 dark:text-white">
+                      {formatOrderType(order.type)}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 dark:text-gray-400">Quantity:</span>
+                    <div className="font-medium text-gray-900 dark:text-white">
+                      {quantity.toFixed(4)}
+                      {executedQty > 0 && (
+                        <div className="text-gray-500 dark:text-gray-400">
+                          Filled: {formatPercentage(fillPercentage)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 dark:text-gray-400">Price:</span>
+                    <div className="font-medium text-gray-900 dark:text-white">
+                      {price > 0 ? formatCurrency(price) : 'Market'}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 dark:text-gray-400">Time:</span>
+                    <div className="font-medium text-gray-900 dark:text-white">
+                      {new Date(order.time).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Desktop Table Layout */}
+        <div className="hidden sm:block overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-800">
