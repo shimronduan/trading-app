@@ -50,16 +50,80 @@ export function RecentTradesTable({ trades }: RecentTradesTableProps) {
 
   return (
     <Card>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          Recent Trades
-        </h3>
-        <Badge variant="info">
-          {trades.length} total trade{trades.length !== 1 ? 's' : ''}
-        </Badge>
-      </div>
+      <div className="p-4 sm:p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Recent Trades
+          </h3>
+          <Badge variant="info">
+            {trades.length} total trade{trades.length !== 1 ? 's' : ''}
+          </Badge>
+        </div>
 
-      <div className="overflow-x-auto">
+        {/* Mobile Card Layout */}
+        <div className="block sm:hidden space-y-3">
+          {paginatedTrades.map((trade, index) => {
+            const qty = safeParseFloat(trade.qty);
+            const price = safeParseFloat(trade.price);
+            const commission = safeParseFloat(trade.commission);
+            const realizedPnl = safeParseFloat(trade.realizedPnl);
+            const isBuy = trade.side === 'BUY';
+            
+            return (
+              <div key={`${trade.id}-${index}`} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      {trade.symbol}
+                    </span>
+                    <Badge variant={isBuy ? 'success' : 'danger'}>
+                      {trade.side}
+                    </Badge>
+                  </div>
+                  <div className="text-right">
+                    <div className={cn(
+                      'text-sm font-medium',
+                      realizedPnl > 0 
+                        ? 'text-green-600 dark:text-green-400' 
+                        : realizedPnl < 0 
+                          ? 'text-red-600 dark:text-red-400'
+                          : 'text-gray-600 dark:text-gray-400'
+                    )}>
+                      {formatCurrency(realizedPnl)}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      {format(new Date(trade.time), 'MMM dd, HH:mm')}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <span className="text-gray-500 dark:text-gray-400">Quantity:</span>
+                    <div className="font-medium text-gray-900 dark:text-white">
+                      {formatPositionSize(qty)}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 dark:text-gray-400">Price:</span>
+                    <div className="font-medium text-gray-900 dark:text-white">
+                      {formatCurrency(price)}
+                    </div>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-gray-500 dark:text-gray-400">Commission:</span>
+                    <div className="font-medium text-gray-900 dark:text-white">
+                      {formatCurrency(commission)} {trade.commissionAsset}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Desktop Table Layout */}
+        <div className="hidden sm:block overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead>
             <tr>
@@ -142,10 +206,10 @@ export function RecentTradesTable({ trades }: RecentTradesTableProps) {
             })}
           </tbody>
         </table>
-      </div>
+        </div>
 
-      {/* Pagination */}
-      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+        {/* Pagination */}
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
@@ -157,20 +221,21 @@ export function RecentTradesTable({ trades }: RecentTradesTableProps) {
         />
       </div>
 
-      {/* Summary */}
-      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex justify-between items-center text-sm">
-          <span className="text-gray-500 dark:text-gray-400">
-            Total Realized PnL:
-          </span>
-          <span className={cn(
-            'font-semibold',
-            sortedTrades.reduce((sum, trade) => sum + safeParseFloat(trade.realizedPnl), 0) > 0
-              ? 'text-green-600 dark:text-green-400'
-              : 'text-red-600 dark:text-red-400'
-          )}>
-            {formatCurrency(sortedTrades.reduce((sum, trade) => sum + safeParseFloat(trade.realizedPnl), 0))}
-          </span>
+        {/* Summary */}
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-gray-500 dark:text-gray-400">
+              Total Realized PnL:
+            </span>
+            <span className={cn(
+              'font-semibold',
+              sortedTrades.reduce((sum, trade) => sum + safeParseFloat(trade.realizedPnl), 0) > 0
+                ? 'text-green-600 dark:text-green-400'
+                : 'text-red-600 dark:text-red-400'
+            )}>
+              {formatCurrency(sortedTrades.reduce((sum, trade) => sum + safeParseFloat(trade.realizedPnl), 0))}
+            </span>
+          </div>
         </div>
       </div>
     </Card>

@@ -74,7 +74,7 @@ export function PerformanceCharts({ dailyPnl }: PerformanceChartsProps) {
   return (
     <div className="space-y-6">
       {/* Period Selector */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
           Performance Analytics
         </h2>
@@ -87,18 +87,18 @@ export function PerformanceCharts({ dailyPnl }: PerformanceChartsProps) {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Daily P&L Chart */}
         <Card>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               Daily P&L
             </h3>
             <div className="flex items-center space-x-4 text-sm">
-              <div className="text-right">
+              <div className="text-center sm:text-right">
                 <p className="text-gray-500 dark:text-gray-400">Win Rate</p>
                 <p className="font-semibold text-gray-900 dark:text-white">
                   {formatPercentage(winRate)}
                 </p>
               </div>
-              <div className="text-right">
+              <div className="text-center sm:text-right">
                 <p className="text-gray-500 dark:text-gray-400">Trading Days</p>
                 <p className="font-semibold text-gray-900 dark:text-white">
                   {totalDays}
@@ -107,7 +107,7 @@ export function PerformanceCharts({ dailyPnl }: PerformanceChartsProps) {
             </div>
           </div>
         
-        <div className="h-80">
+        <div className="h-64 sm:h-80">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={portfolioData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
@@ -147,7 +147,7 @@ export function PerformanceCharts({ dailyPnl }: PerformanceChartsProps) {
           </div>
         </div>
         
-        <div className="h-80">
+        <div className="h-64 sm:h-80">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={portfolioData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
