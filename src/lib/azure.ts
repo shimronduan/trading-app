@@ -4,6 +4,10 @@ import {
   AtrMultiplesResponse,
   CreateAtrMultipleRequest, 
   UpdateAtrMultipleRequest,
+  TradingConfig,
+  TradingConfigsResponse,
+  CreateTradingConfigRequest,
+  UpdateTradingConfigRequest,
   ApiResponse 
 } from '@/types';
 
@@ -200,6 +204,147 @@ class AzureApiClient {
       };
     }
   }
+
+  /**
+   * Get all trading configurations using Next.js API proxy (with fixed response handling)
+   */
+  async getTradingConfigs(): Promise<ApiResponse<TradingConfig[]>> {
+    try {
+      // Use Next.js API route as proxy to avoid CORS issues
+      const response = await this.client.get('/api/trading_configs');
+      
+      if (response.data.success) {
+        return {
+          success: true,
+          data: response.data.data,
+        };
+      }
+      
+      return {
+        success: false,
+        error: response.data.error || 'Failed to fetch trading configurations',
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || 'Failed to fetch trading configurations',
+      };
+    }
+  }
+
+  /**
+   * Get a specific trading configuration by symbol using Next.js API proxy
+   */
+  async getTradingConfig(symbol: string): Promise<ApiResponse<TradingConfig>> {
+    try {
+      // Use the same proxy endpoint and filter client-side
+      const response = await this.client.get('/api/trading_configs');
+      
+      if (response.data.success && response.data.data) {
+        const record = response.data.data.find((r: any) => r.RowKey === symbol);
+        
+        if (record) {
+          return {
+            success: true,
+            data: record,
+          };
+        } else {
+          return {
+            success: false,
+            error: 'Trading configuration not found',
+          };
+        }
+      }
+      
+      return {
+        success: false,
+        error: response.data.error || 'Failed to fetch trading configuration',
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || 'Failed to fetch trading configuration',
+      };
+    }
+  }
+
+  /**
+   * Create a new trading configuration using Next.js API proxy
+   */
+  async createTradingConfig(data: CreateTradingConfigRequest): Promise<ApiResponse<TradingConfig>> {
+    try {
+      const response = await this.client.post('/api/trading_configs', data);
+      
+      if (response.data.success) {
+        return {
+          success: true,
+          data: response.data.data,
+        };
+      }
+      
+      return {
+        success: false,
+        error: response.data.error || 'Failed to create trading configuration',
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || 'Failed to create trading configuration',
+      };
+    }
+  }
+
+  /**
+   * Update an existing trading configuration using Next.js API proxy
+   */
+  async updateTradingConfig(symbol: string, data: UpdateTradingConfigRequest): Promise<ApiResponse<TradingConfig>> {
+    try {
+      const response = await this.client.put(`/api/trading_configs/${symbol}`, data);
+      
+      if (response.data.success) {
+        return {
+          success: true,
+          data: response.data.data,
+        };
+      }
+      
+      return {
+        success: false,
+        error: response.data.error || 'Failed to update trading configuration',
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || 'Failed to update trading configuration',
+      };
+    }
+  }
+
+  /**
+   * Delete a trading configuration using Next.js API proxy
+   */
+  async deleteTradingConfig(symbol: string): Promise<ApiResponse<boolean>> {
+    try {
+      const response = await this.client.delete(`/api/trading_configs/${symbol}`);
+      
+      if (response.data.success) {
+        return {
+          success: true,
+          data: true,
+        };
+      }
+      
+      return {
+        success: false,
+        error: response.data.error || 'Failed to delete trading configuration',
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || 'Failed to delete trading configuration',
+      };
+    }
+  }
 }
 
 // Singleton instance
@@ -248,6 +393,45 @@ export const mockAtrMultiples: AtrMultiple[] = [
     close_fraction: 1.0,
     Timestamp: new Date().toISOString(),
     row: 4,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+];
+
+export const mockTradingConfigs: TradingConfig[] = [
+  {
+    id: 'DOGEUSDT',
+    PartitionKey: 'DOGEUSDT',
+    RowKey: 'DOGEUSDT',
+    leverage: 5,
+    wallet_allocation: 0.75,
+    chart_time_interval: '15m',
+    atr_candles: 14,
+    Timestamp: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'BTCUSDT',
+    PartitionKey: 'BTCUSDT',
+    RowKey: 'BTCUSDT',
+    leverage: 3,
+    wallet_allocation: 0.5,
+    chart_time_interval: '5m',
+    atr_candles: 20,
+    Timestamp: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'ETHUSDT',
+    PartitionKey: 'ETHUSDT',
+    RowKey: 'ETHUSDT',
+    leverage: 4,
+    wallet_allocation: 0.3,
+    chart_time_interval: '1h',
+    atr_candles: 12,
+    Timestamp: new Date().toISOString(),
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },

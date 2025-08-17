@@ -12,7 +12,8 @@ import {
   Sun, 
   Moon,
   Wallet,
-  TrendingDown
+  TrendingDown,
+  Cog
 } from 'lucide-react';
 import { cn, formatCurrency, formatPercentage, safeParseFloat } from '@/utils';
 import { useTheme } from '@/lib/theme';
@@ -29,6 +30,11 @@ const navItems: NavItem[] = [
     label: 'ATR Multiples',
     href: '/atr-multiples',
     icon: TrendingUp,
+  },
+  {
+    label: 'Trading Configs',
+    href: '/trading-configs',
+    icon: Cog,
   },
   {
     label: 'Settings',

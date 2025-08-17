@@ -31,6 +31,14 @@ Deploy this app to Azure with **Terraform** infrastructure as code! **COMPLETELY
 - **Form Validation**: Comprehensive input validation with helpful error messages
 - **Responsive Design**: Works perfectly on mobile and desktop
 
+### 🔧 Trading Configurations Management
+- **CRUD Operations**: Create, read, update, and delete trading configurations for different symbols
+- **Symbol-based Configuration**: Set leverage, wallet allocation, timeframe, and ATR parameters per trading pair
+- **Sortable Table**: Sort by symbol, leverage, allocation, timeframe, or last updated
+- **Search Functionality**: Filter configurations by symbol or any parameter
+- **Form Validation**: Comprehensive validation with symbol format checking and parameter limits
+- **Responsive Design**: Mobile-friendly interface with touch-optimized controls
+
 ### 🎨 Modern UI/UX
 - **Dark/Light Mode**: Toggle between themes with system preference detection
 - **Responsive Design**: Mobile-first approach with bottom navigation on mobile
@@ -56,6 +64,7 @@ Deploy this app to Azure with **Terraform** infrastructure as code! **COMPLETELY
 src/
 ├── app/                    # Next.js App Router pages
 │   ├── atr-multiples/     # ATR multiples management page
+│   ├── trading-configs/   # Trading configurations management page
 │   ├── settings/          # Settings and configuration page
 │   ├── layout.tsx         # Root layout with providers
 │   └── page.tsx           # Dashboard home page
@@ -68,9 +77,12 @@ src/
 │   │   ├── PerformanceCharts.tsx
 │   │   ├── OpenPositionsTable.tsx
 │   │   └── RecentTradesTable.tsx
-│   └── atr-multiples/     # ATR management components
-│       ├── AtrMultiplesList.tsx
-│       └── AtrMultipleForm.tsx
+│   ├── atr-multiples/     # ATR management components
+│   │   ├── AtrMultiplesList.tsx
+│   │   └── AtrMultipleForm.tsx
+│   └── trading-configs/   # Trading configurations components
+│       ├── TradingConfigsList.tsx
+│       └── TradingConfigForm.tsx
 ├── hooks/                 # Custom React hooks and React Query hooks
 ├── lib/                   # API clients and utilities
 │   ├── binance.ts         # Binance Futures API client
@@ -152,7 +164,17 @@ PUT    /api/tp_sl/:id      # Update existing multiple
 DELETE /api/tp_sl/:id      # Delete multiple
 ```
 
-**Request/Response Format**:
+For trading configurations management, the app expects these endpoints:
+
+```
+GET    /api/trading_configs        # List all trading configurations
+GET    /api/trading_configs/:symbol # Get specific configuration
+POST   /api/trading_configs        # Create new configuration
+PUT    /api/trading_configs/:symbol # Update existing configuration
+DELETE /api/trading_configs/:symbol # Delete configuration
+```
+
+**ATR Multiples Request/Response Format**:
 ```typescript
 interface AtrMultiple {
   id?: string;
@@ -161,6 +183,19 @@ interface AtrMultiple {
   row: number;            // Integer >= 1
   created_at?: string;
   updated_at?: string;
+}
+```
+
+**Trading Configurations Request/Response Format**:
+```typescript
+interface TradingConfig {
+  PartitionKey: string;      // Trading symbol (e.g., "DOGEUSDT")
+  RowKey: string;           // Trading symbol (e.g., "DOGEUSDT")
+  leverage: number;         // 1 - 125
+  wallet_allocation: number; // 0.01 - 1.0 (1% - 100%)
+  chart_time_interval: string; // e.g., "15m", "1h", "4h"
+  atr_candles: number;      // 1 - 100 (typically 14)
+  Timestamp: string;        // ISO date string
 }
 ```
 

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { binanceClient, mockBinanceData } from '@/lib/binance';
-import { azureApiClient, mockAtrMultiples } from '@/lib/azure';
+import { azureApiClient, mockAtrMultiples, mockTradingConfigs } from '@/lib/azure';
 import { safeParseFloat } from '@/utils';
 import { 
   BinanceAccountInfo, 
@@ -8,7 +8,10 @@ import {
   DailyPnlData,
   AtrMultiple,
   CreateAtrMultipleRequest,
-  UpdateAtrMultipleRequest 
+  UpdateAtrMultipleRequest,
+  TradingConfig,
+  CreateTradingConfigRequest,
+  UpdateTradingConfigRequest
 } from '@/types';
 
 // Query keys
@@ -24,6 +27,11 @@ export const queryKeys = {
     all: ['atr'] as const,
     multiples: ['atr', 'multiples'] as const,
     multiple: (id: string) => ['atr', 'multiple', id] as const,
+  },
+  tradingConfigs: {
+    all: ['tradingConfigs'] as const,
+    configs: ['tradingConfigs', 'configs'] as const,
+    config: (symbol: string) => ['tradingConfigs', 'config', symbol] as const,
   },
 } as const;
 
@@ -285,4 +293,91 @@ export function useTradingStats() {
     isLoading: trades.isLoading || incomeHistory.isLoading,
     isError: trades.isError || incomeHistory.isError,
   };
+}
+
+// Trading Configurations hooks
+export function useTradingConfigs() {
+  console.log('useTradingConfigs: Hook called');
+  
+  const result = useQuery({
+    queryKey: queryKeys.tradingConfigs.configs,
+    queryFn: async () => {
+      console.log('useTradingConfigs: queryFn executed');
+      if (USE_MOCK_DATA) {
+        console.log('useTradingConfigs: Using mock data');
+        return { success: true, data: mockTradingConfigs };
+      }
+      console.log('useTradingConfigs: Calling Azure API');
+      const result = await azureApiClient.getTradingConfigs();
+      console.log('useTradingConfigs: API result =', result);
+      return result;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+    // Disable React 19 experimental features
+    enabled: true,
+    throwOnError: false,
+  });
+  
+  console.log('useTradingConfigs: Query result =', result);
+  return result;
+}
+
+export function useTradingConfig(symbol: string) {
+  return useQuery({
+    queryKey: queryKeys.tradingConfigs.config(symbol),
+    queryFn: async () => {
+      if (USE_MOCK_DATA) {
+        const config = mockTradingConfigs.find(c => c.RowKey === symbol);
+        return { success: true, data: config };
+      }
+      return await azureApiClient.getTradingConfig(symbol);
+    },
+    enabled: !!symbol,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useCreateTradingConfig() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: CreateTradingConfigRequest) => {
+      return await azureApiClient.createTradingConfig(data);
+    },
+    onSuccess: () => {
+      // Invalidate and refetch trading configs
+      queryClient.invalidateQueries({ queryKey: queryKeys.tradingConfigs.all });
+    },
+  });
+}
+
+export function useUpdateTradingConfig() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ symbol, data }: { symbol: string; data: UpdateTradingConfigRequest }) => {
+      return await azureApiClient.updateTradingConfig(symbol, data);
+    },
+    onSuccess: (data, variables) => {
+      // Invalidate and refetch trading configs
+      queryClient.invalidateQueries({ queryKey: queryKeys.tradingConfigs.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tradingConfigs.config(variables.symbol) });
+    },
+  });
+}
+
+export function useDeleteTradingConfig() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (symbol: string) => {
+      return await azureApiClient.deleteTradingConfig(symbol);
+    },
+    onSuccess: () => {
+      // Invalidate and refetch trading configs
+      queryClient.invalidateQueries({ queryKey: queryKeys.tradingConfigs.all });
+    },
+  });
 }
