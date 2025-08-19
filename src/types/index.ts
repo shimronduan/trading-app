@@ -172,11 +172,54 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
+// Trading Configuration Types
+export interface TradingConfig {
+  id?: string;
+  PartitionKey: string; // Symbol like "DOGEUSDT"
+  RowKey: string; // Symbol like "DOGEUSDT"
+  leverage: number;
+  wallet_allocation: number;
+  chart_time_interval: string;
+  atr_candles: number;
+  Timestamp: string;
+  // Legacy fields for backward compatibility
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface TradingConfigsResponse {
+  records: TradingConfig[];
+  count: number;
+}
+
+export interface CreateTradingConfigRequest {
+  symbol: string;
+  leverage: number;
+  wallet_allocation: number;
+  chart_time_interval: string;
+  atr_candles: number;
+}
+
+export interface UpdateTradingConfigRequest {
+  leverage?: number;
+  wallet_allocation?: number;
+  chart_time_interval?: string;
+  atr_candles?: number;
+}
+
 // Form Types
 export interface AtrMultipleFormData {
   atr_multiple: number;
   close_fraction: number;
   PartitionKey: string;
+}
+
+export interface TradingConfigFormData {
+  symbol: string;
+  leverage: number;
+  wallet_allocation: number;
+  chart_time_interval: string;
+  atr_candles: number;
 }
 
 // Chart Data Types
