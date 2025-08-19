@@ -291,20 +291,20 @@ export function TradingConfigsList() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex flex-col space-y-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+        <div className="flex flex-col space-y-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
               Trading Configurations
             </h2>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               Manage trading bot configurations for different symbols and their parameters.
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md px-3 py-2 w-full sm:w-auto">
+          <div className="flex flex-col space-y-3 w-full">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md px-3 py-2">
               <span className="text-sm text-blue-800 dark:text-blue-200">
                 Data Source: Azure Table Storage
               </span>
@@ -326,8 +326,8 @@ export function TradingConfigsList() {
       {/* Search and Stats */}
       <Card>
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-            <div className="relative w-full sm:w-64">
+          <div className="flex flex-col space-y-4">
+            <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <input
                 type="text"
@@ -336,7 +336,7 @@ export function TradingConfigsList() {
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
             </div>
-            <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
               <span>Total: {configs.length}</span>
               <span>Filtered: {filteredAndSortedConfigs.length}</span>
             </div>
@@ -368,94 +368,179 @@ export function TradingConfigsList() {
             }
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-800">
-                <tr>
-                  <th className="px-6 py-3 text-left">
-                    <SortButton field="RowKey">Symbol</SortButton>
-                  </th>
-                  <th className="px-6 py-3 text-left">
-                    <SortButton field="leverage">Leverage</SortButton>
-                  </th>
-                  <th className="px-6 py-3 text-left">
-                    <SortButton field="wallet_allocation">Allocation</SortButton>
-                  </th>
-                  <th className="px-6 py-3 text-left">
-                    <SortButton field="chart_time_interval">Timeframe</SortButton>
-                  </th>
-                  <th className="px-6 py-3 text-left">
-                    ATR Candles
-                  </th>
-                  <th className="px-6 py-3 text-left">
-                    <SortButton field="Timestamp">Last Updated</SortButton>
-                  </th>
-                  <th className="px-6 py-3 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredAndSortedConfigs.map((config) => (
-                  <tr key={config.RowKey} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <Badge variant="default" className="text-xs font-mono">
-                          {config.RowKey}
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 dark:bg-gray-800">
+                  <tr>
+                    <th className="px-6 py-3 text-left">
+                      <SortButton field="RowKey">Symbol</SortButton>
+                    </th>
+                    <th className="px-6 py-3 text-left">
+                      <SortButton field="leverage">Leverage</SortButton>
+                    </th>
+                    <th className="px-6 py-3 text-left">
+                      <SortButton field="wallet_allocation">Allocation</SortButton>
+                    </th>
+                    <th className="px-6 py-3 text-left">
+                      <SortButton field="chart_time_interval">Timeframe</SortButton>
+                    </th>
+                    <th className="px-6 py-3 text-left">
+                      ATR Candles
+                    </th>
+                    <th className="px-6 py-3 text-left">
+                      <SortButton field="Timestamp">Last Updated</SortButton>
+                    </th>
+                    <th className="px-6 py-3 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                  {filteredAndSortedConfigs.map((config) => (
+                    <tr key={config.RowKey} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <Badge variant="default" className="text-xs font-mono">
+                            {config.RowKey}
+                          </Badge>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <Badge 
+                          variant={config.leverage >= 10 ? "warning" : "default"}
+                          className="text-xs"
+                        >
+                          {config.leverage}x
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          {formatWalletAllocation(config.wallet_allocation)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <Badge variant="default" className="text-xs">
+                          {config.chart_time_interval}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm text-gray-900 dark:text-white">
+                          {config.atr_candles}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {formatTimestamp(config.Timestamp)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <div className="flex items-center justify-center space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(config)}
+                            className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(config)}
+                            className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="lg:hidden space-y-4 p-4">
+              {filteredAndSortedConfigs.map((config) => (
+                <div key={config.RowKey} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <Badge variant="default" className="text-sm font-mono">
+                      {config.RowKey}
+                    </Badge>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(config)}
+                        className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-2"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(config)}
+                        className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-2"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Leverage
+                      </label>
+                      <div className="mt-1">
+                        <Badge 
+                          variant={config.leverage >= 10 ? "warning" : "default"}
+                          className="text-xs"
+                        >
+                          {config.leverage}x
                         </Badge>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <Badge 
-                        variant={config.leverage >= 10 ? "warning" : "default"}
-                        className="text-xs"
-                      >
-                        {config.leverage}x
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Allocation
+                      </label>
+                      <div className="mt-1 text-sm font-medium text-gray-900 dark:text-white">
                         {formatWalletAllocation(config.wallet_allocation)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <Badge variant="default" className="text-xs">
-                        {config.chart_time_interval}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-gray-900 dark:text-white">
-                        {config.atr_candles}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {formatTimestamp(config.Timestamp)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <div className="flex items-center justify-center space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(config)}
-                          className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(config)}
-                          className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Timeframe
+                      </label>
+                      <div className="mt-1">
+                        <Badge variant="default" className="text-xs">
+                          {config.chart_time_interval}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        ATR Candles
+                      </label>
+                      <div className="mt-1 text-sm text-gray-900 dark:text-white">
+                        {config.atr_candles}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+                    <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Last Updated
+                    </label>
+                    <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      {formatTimestamp(config.Timestamp)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </Card>
 

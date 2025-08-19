@@ -36,11 +36,6 @@ const navItems: NavItem[] = [
     href: '/trading-configs',
     icon: Cog,
   },
-  {
-    label: 'Settings',
-    href: '/settings',
-    icon: Settings,
-  },
 ];
 
 interface LayoutProps {
