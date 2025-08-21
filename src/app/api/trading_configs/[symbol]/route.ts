@@ -83,28 +83,57 @@ export async function DELETE(
   try {
     const symbol = params.symbol;
     
-    console.log('DELETE request for trading config:', symbol);
-    console.log('NOTE: Azure Functions API does not support DELETE for trading_configs endpoint');
+    console.log('Proxying DELETE request to Azure Functions for trading config:', symbol);
 
-    // The Azure Functions API does not currently support DELETE operations for trading configurations
-    // Return a proper error message to inform the user
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Delete operation is not currently supported for trading configurations. The Azure Functions API does not implement this endpoint. Please contact the API maintainer to add DELETE support to the trading_configs endpoint.' 
+    const response = await fetch(`${AZURE_API_BASE_URL}/trading_configs/${symbol}?code=${AZURE_API_KEY}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'TradingApp/1.0',
       },
-      { status: 501 } // 501 Not Implemented
-    );
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Azure API Delete Error:', response.status, response.statusText, errorText);
+      
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: `Failed to delete trading configuration: ${response.status} ${response.statusText}` 
+        },
+        { status: response.status }
+      );
+    }
+
+    const data = await response.json();
+    console.log('Delete response:', data);
+
+    return NextResponse.json({
+      success: true,
+      data: data,
+    });
 
   } catch (error: any) {
     console.error('Proxy DELETE error:', error);
     
+    if (error.name === 'AbortError' || error.message?.includes('timeout')) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Request timeout - Azure API is taking too long to respond' 
+        },
+        { status: 408 }
+      );
+    }
+
     return NextResponse.json(
       { 
         success: false, 
-        error: 'Delete operation is not supported for trading configurations' 
+        error: error.message || 'Failed to delete trading configuration' 
       },
-      { status: 501 }
+      { status: 500 }
     );
   }
 }

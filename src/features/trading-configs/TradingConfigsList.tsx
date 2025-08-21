@@ -440,6 +440,7 @@ export function TradingConfigsList() {
                             size="sm"
                             onClick={() => handleEdit(config)}
                             className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                            title="Edit configuration"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -448,6 +449,7 @@ export function TradingConfigsList() {
                             size="sm"
                             onClick={() => handleDelete(config)}
                             className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                            title="Delete configuration"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -473,6 +475,7 @@ export function TradingConfigsList() {
                         size="sm"
                         onClick={() => handleEdit(config)}
                         className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-2"
+                        title="Edit configuration"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -481,6 +484,7 @@ export function TradingConfigsList() {
                         size="sm"
                         onClick={() => handleDelete(config)}
                         className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-2"
+                        title="Delete configuration"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
