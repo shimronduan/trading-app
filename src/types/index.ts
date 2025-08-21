@@ -149,7 +149,9 @@ export interface DashboardData {
 export interface DailyPnlData {
   date: string;
   pnl: number;
-  cumulativePnl: number;
+  cumulativePnl?: number;
+  percentagePnl?: number; // Sum of percentage P&L for all trades in the day
+  tradeCount?: number; // Number of trades executed in the day
 }
 
 // UI Types

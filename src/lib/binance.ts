@@ -258,6 +258,35 @@ class BinanceClient {
   }
 
   /**
+   * Get percentage-based daily PnL for the last N days using individual trade data
+   */
+  async getPercentageDailyPnl(days: number = 30): Promise<ApiResponse<any[]>> {
+    try {
+      console.log('Fetching percentage-based daily PnL via API route...');
+      
+      const params = new URLSearchParams();
+      params.append('days', days.toString());
+      
+      const response = await this.client.get(`/api/binance/daily-pnl-percentage?${params.toString()}`);
+      console.log('Percentage daily PnL response:', response.status, response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching percentage daily PnL:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: error.config?.url,
+      });
+      
+      return {
+        success: false,
+        error: error.message || 'Failed to fetch percentage daily PnL',
+      };
+    }
+  }
+
+  /**
    * Test API credentials and permissions via API route
    */
   async testApiCredentials(): Promise<ApiResponse<{ valid: boolean; permissions: string[] }>> {

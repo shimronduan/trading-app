@@ -98,6 +98,29 @@ export function useBinanceDailyPnl(days: number = 30) {
   });
 }
 
+export function useBinancePercentageDailyPnl(days: number = 30) {
+  return useQuery({
+    queryKey: [...queryKeys.binance.dailyPnl(days), 'percentage'],
+    queryFn: async () => {
+      if (USE_MOCK_DATA) {
+        // Mock percentage-based daily P&L data
+        const mockPercentageData = Array.from({ length: days }, (_, i) => {
+          const percentagePnl = (Math.random() - 0.5) * 10; // Random between -5% and +5%
+          return {
+            date: new Date(Date.now() - (days - 1 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            pnl: percentagePnl * 1000, // Mock absolute value
+            percentagePnl: percentagePnl,
+            tradeCount: Math.floor(Math.random() * 10) + 1
+          };
+        });
+        return { success: true, data: mockPercentageData };
+      }
+      return await binanceClient.getPercentageDailyPnl(days);
+    },
+    staleTime: 300000, // 5 minutes
+  });
+}
+
 export function useBinanceIncomeHistory(
   symbol?: string,
   incomeType?: string,
@@ -215,7 +238,7 @@ export function useDashboardData() {
   const accountInfo = useBinanceAccountInfo();
   const trades = useBinanceTrades(undefined, 20);
   const openOrders = useBinanceOpenOrders();
-  const dailyPnl = useBinanceDailyPnl(30);
+  const dailyPnl = useBinancePercentageDailyPnl(30); // Use percentage-based calculation
 
   const isLoading = accountInfo.isLoading || trades.isLoading || openOrders.isLoading || dailyPnl.isLoading;
   const isError = accountInfo.isError || trades.isError || openOrders.isError || dailyPnl.isError;

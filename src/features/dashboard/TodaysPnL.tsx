@@ -19,20 +19,20 @@ export function TodaysPnL({ accountInfo, dailyPnl }: TodaysPnLProps) {
   const todaysPnlData = dailyPnl.find(day => day.date === today);
   const todaysPnlAmount = todaysPnlData?.pnl || 0;
   
-  // Calculate today's P&L percentage based on account balance
+  // Calculate portfolio values for display
   const totalBalance = safeParseFloat(accountInfo.totalWalletBalance);
-
-  // The portfolio value at the start of the day is the current balance minus today's P&L.
   const portfolioValueStartOfDay = totalBalance - todaysPnlAmount;
-
-  // Calculate today's return based on the portfolio value at the start of the day.
-  const todaysReturnPercentage =
-    portfolioValueStartOfDay > 0
-      ? (todaysPnlAmount / portfolioValueStartOfDay) * 100
-      : 0;
+  
+  // Use percentage P&L if available, otherwise fallback to calculation
+  const todaysPercentagePnl = (todaysPnlData as any)?.percentagePnl !== undefined 
+    ? (todaysPnlData as any).percentagePnl 
+    : (() => {
+        // Fallback calculation for backward compatibility
+        return portfolioValueStartOfDay > 0 ? (todaysPnlAmount / portfolioValueStartOfDay) * 100 : 0;
+      })();
 
   const isPositive = todaysPnlAmount >= 0;
-  const isPercentagePositive = todaysReturnPercentage >= 0;
+  const isPercentagePositive = todaysPercentagePnl >= 0;
 
   return (
     <Card>
@@ -98,7 +98,7 @@ export function TodaysPnL({ accountInfo, dailyPnl }: TodaysPnLProps) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                Today's Return
+                Today's Return (Sum of Trade %s)
               </p>
               <p className={cn(
                 "text-lg sm:text-2xl font-bold truncate",
@@ -106,7 +106,7 @@ export function TodaysPnL({ accountInfo, dailyPnl }: TodaysPnLProps) {
                   ? "text-green-600 dark:text-green-400" 
                   : "text-red-600 dark:text-red-400"
               )}>
-                {formatPercentage(todaysReturnPercentage)}
+                {isPercentagePositive ? '+' : ''}{todaysPercentagePnl.toFixed(2)}%
               </p>
             </div>
           </div>
@@ -131,6 +131,16 @@ export function TodaysPnL({ accountInfo, dailyPnl }: TodaysPnLProps) {
                 {formatCurrency(totalBalance)}
               </span>
             </div>
+            {(todaysPnlData as any)?.tradeCount && (
+              <div className="flex flex-col sm:flex-row sm:justify-between">
+                <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-1 sm:mb-0">
+                  Trades Today
+                </span>
+                <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
+                  {(todaysPnlData as any).tradeCount}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>

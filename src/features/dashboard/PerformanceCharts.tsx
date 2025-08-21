@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import { Card } from '@/components/ui';
 import { PeriodSelector, TimePeriod, filterDataByPeriod } from '@/components/PeriodSelector';
 import { formatCurrency, formatPercentage } from '@/utils';
@@ -26,10 +26,17 @@ export function PerformanceCharts({ dailyPnl }: PerformanceChartsProps) {
         .slice(0, index + 1)
         .reduce((sum, day) => sum + day.pnl, 0);
       
+      // Calculate cumulative percentage PnL if available
+      const cumulativePercentagePnl = filteredData
+        .slice(0, index + 1)
+        .reduce((sum, day) => sum + ((day as any).percentagePnl || 0), 0);
+      
       return {
         date: item.date,
         pnl: item.pnl,
         cumulativePnl,
+        percentagePnl: (item as any).percentagePnl || 0,
+        cumulativePercentagePnl,
         formattedDate: new Date(item.date).toLocaleDateString('en-US', { 
           month: 'short', 
           day: 'numeric' 
@@ -39,7 +46,8 @@ export function PerformanceCharts({ dailyPnl }: PerformanceChartsProps) {
   }, [filteredData]);
 
   const totalPnl = portfolioData[portfolioData.length - 1]?.cumulativePnl || 0;
-  const profitableDays = filteredData.filter(day => day.pnl > 0).length;
+  const totalPercentagePnl = portfolioData[portfolioData.length - 1]?.cumulativePercentagePnl || 0;
+  const profitableDays = filteredData.filter(day => (day as any).percentagePnl ? (day as any).percentagePnl > 0 : day.pnl > 0).length;
   const totalDays = filteredData.length;
   const winRate = totalDays > 0 ? (profitableDays / totalDays) * 100 : 0;
 
@@ -55,16 +63,31 @@ export function PerformanceCharts({ dailyPnl }: PerformanceChartsProps) {
           })
         : label; // fallback to the formatted label if no original date
 
+      const dayData = payload[0]?.payload;
+
       return (
         <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
           <p className="text-sm font-medium text-gray-900 dark:text-white">
             {displayDate}
           </p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} className="text-sm" style={{ color: entry.color }}>
-              {entry.name}: {formatCurrency(entry.value)}
+          {/* Show percentage P&L prominently */}
+          {dayData?.percentagePnl !== undefined && (
+            <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+              Daily % P&L: {formatPercentage(dayData.percentagePnl)}
             </p>
-          ))}
+          )}
+          {/* Show absolute P&L as secondary info */}
+          {dayData?.pnl !== undefined && (
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Absolute P&L: {formatCurrency(dayData.pnl)}
+            </p>
+          )}
+          {/* Show trade count if available */}
+          {dayData?.tradeCount && (
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Trades: {dayData.tradeCount}
+            </p>
+          )}
         </div>
       );
     }
@@ -89,7 +112,7 @@ export function PerformanceCharts({ dailyPnl }: PerformanceChartsProps) {
         <Card>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Daily P&L
+              Daily % P&L (Sum of Trade Percentages)
             </h3>
             <div className="flex items-center space-x-4 text-sm">
               <div className="text-center sm:text-right">
@@ -120,14 +143,17 @@ export function PerformanceCharts({ dailyPnl }: PerformanceChartsProps) {
               <YAxis 
                 stroke="#6B7280"
                 fontSize={12}
-                tickFormatter={(value) => formatCurrency(value, 'USD', 0)}
+                tickFormatter={(value) => `${value.toFixed(2)}%`}
               />
               <Tooltip content={<CustomTooltip />} />
               <Bar 
-                dataKey="pnl" 
-                fill="#3B82F6"
+                dataKey="percentagePnl" 
                 radius={[2, 2, 0, 0]}
-              />
+              >
+                {portfolioData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.percentagePnl >= 0 ? '#10B981' : '#EF4444'} />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -139,11 +165,19 @@ export function PerformanceCharts({ dailyPnl }: PerformanceChartsProps) {
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             Portfolio Growth
           </h3>
-          <div className="text-right">
-            <p className="text-gray-500 dark:text-gray-400">Total P&L</p>
-            <p className={`font-semibold ${totalPnl >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-              {formatCurrency(totalPnl)}
-            </p>
+          <div className="flex space-x-6">
+            <div className="text-right">
+              <p className="text-gray-500 dark:text-gray-400">Total P&L</p>
+              <p className={`font-semibold ${totalPnl >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                {formatCurrency(totalPnl)}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-gray-500 dark:text-gray-400">Total % P&L</p>
+              <p className={`font-semibold ${totalPercentagePnl >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                {formatPercentage(totalPercentagePnl)}
+              </p>
+            </div>
           </div>
         </div>
         
@@ -158,18 +192,40 @@ export function PerformanceCharts({ dailyPnl }: PerformanceChartsProps) {
                 tickMargin={8}
               />
               <YAxis 
+                yAxisId="currency"
+                orientation="left"
                 stroke="#6B7280"
                 fontSize={12}
                 tickFormatter={(value) => formatCurrency(value, 'USD', 0)}
               />
+              <YAxis 
+                yAxisId="percentage"
+                orientation="right"
+                stroke="#6B7280"
+                fontSize={12}
+                tickFormatter={(value) => `${value.toFixed(1)}%`}
+              />
               <Tooltip content={<CustomTooltip />} />
               <Line 
+                yAxisId="currency"
                 type="monotone" 
                 dataKey="cumulativePnl" 
                 stroke="#10B981" 
                 strokeWidth={2}
+                name="Cumulative P&L ($)"
                 dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
                 activeDot={{ r: 6, fill: '#10B981' }}
+              />
+              <Line 
+                yAxisId="percentage"
+                type="monotone" 
+                dataKey="cumulativePercentagePnl" 
+                stroke="#3B82F6" 
+                strokeWidth={2}
+                strokeDasharray="5 5"
+                name="Cumulative % P&L"
+                dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, fill: '#3B82F6' }}
               />
             </LineChart>
           </ResponsiveContainer>
